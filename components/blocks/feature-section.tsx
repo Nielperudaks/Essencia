@@ -98,7 +98,7 @@ export function FeatureSection() {
         >
           {/* Left Large Block - Video with Overlay Card */}
           <div 
-            className={`relative rounded-3xl overflow-hidden h-[500px] md:h-auto md:col-span-2 md:row-span-2 transition-all duration-700 ease-out ${
+            className={`relative rounded-3xl overflow-hidden h-[500px] md:h-auto md:col-span-2 md:row-span-2 transition-all duration-700 ease-out hover:scale-102 transition-transform duration-500${
               isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
             }`}
             style={{ transitionDelay: '0ms' }}
@@ -110,8 +110,8 @@ export function FeatureSection() {
               playsInline
               className="absolute inset-0 w-full h-full object-cover"
             >
-              <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/c4baaf67-b900-4b90-af2a-daf25a5a4b78-5un5eTbj9Z67qEtEdsQwlYrte9dZM9.mp4" type="video/mp4" />
-            </video>
+              <source src="https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/Multi-Shot_Video_-_driving_her_scooter_gladly_in_the_neighborhood_early_in_the_morning%2C_looking_fres.mp4" type="video/mp4" />
+            </video> 
             {/* Overlay Card */}
             <div className="absolute bottom-8 left-8 right-8 bg-white p-6 shadow-lg rounded-xl">
               <div className="flex items-start gap-3">
@@ -132,26 +132,26 @@ export function FeatureSection() {
 
           {/* Top Right - 100% Natural */}
           <div 
-            className={`rounded-3xl p-6 md:p-8 flex flex-col justify-center md:col-span-2 relative overflow-hidden transition-all duration-700 ease-out ${
+            className={`rounded-3xl p-6 md:p-8 flex flex-col justify-center md:col-span-2 relative overflow-hidden transition-all duration-700 ease-out hover:scale-102 transition-transform duration-500${
               isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
             }`}
             style={{ transitionDelay: '100ms' }}
           >
             {/* Background Image */}
             <Image
-              src="/images/products/0ed61900-dd29-4dd2-bc2d-abc2db54c352.png"
+             
+              src='https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/Gemini_Generated_Image_ph5919ph5919ph59.png'
               alt="Natural ingredients"
               fill
-              className="object-cover"
-            />
-
-            
+              className="absolute inset-0 w-full h-full object-cover"
+            /> 
+            <div className="absolute inset-0 bg-linear-to-l from-foreground/20 to-foreground/80" />   
             <div className="relative z-10">
-              <h3 className="text-3xl md:text-4xl text-white mb-2">
-                100% Natural
+              <h3 className="text-3xl md:text-4xl text-white font-bold mb-2">
+                Skin-Safe Ingredients
               </h3>
               <h3 className="text-2xl md:text-3xl text-white/70 mb-4">
-                100% You
+                100% Natural
               </h3>
               
               <div className="space-y-2">
@@ -173,34 +173,31 @@ export function FeatureSection() {
 
           {/* Bottom Right - Eco-Friendly Packaging */}
           <div 
-            className={`rounded-3xl p-6 md:p-8 flex flex-col justify-center relative overflow-hidden md:col-span-2 transition-all duration-700 ease-out ${
+            className={`rounded-3xl p-6 md:p-8 flex flex-col justify-center relative overflow-hidden md:col-span-2 transition-all duration-700 ease-out hover:scale-102 transition-transform duration-500 ${
               isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
             }`}
             style={{ transitionDelay: '200ms' }}
           >
             {/* Background Video */}
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover scale-[1.02]"
-            >
-              <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/a0b7c364-afa9-4afa-9716-45718578cc01-Ih8UaqQr1bl8aoNlbRha4FgaQ65eXX.mp4" type="video/mp4" />
-            </video>
+            <Image
+             
+              src='https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/Gemini_Generated_Image_8aez548aez548aez223.png'
+              alt="Natural ingredients"
+              fill
+              className="absolute inset-0 w-full h-full object-cover "
+            /> 
+            <div className="absolute inset-0 bg-linear-to-b from-foreground/0  to-foreground/70" />   
             {/* Overlay for text readability */}
             <div className="absolute inset-0 bg-transparent" />
             
-            <div className="relative z-10 flex flex-col justify-center h-full text-left items-start">
-              <div className="inline-flex items-center justify-center w-10 h-10 mb-3">
-                <Recycle className="w-8 h-8 text-black" />
-              </div>
-              <h3 className="font-sans text-base mb-1 text-black">
-                Eco-Friendly
+            <div className="relative z-10 flex flex-col justify-end items-end h-full text-right text-white">
+
+              <h3 className="font-sans text-4xl md:3xl font-bold mb-1 ">
+                Versatile
               </h3>
-              <h3 className="text-2xl md:text-3xl mb-2 text-black">
-                Packaging
-              </h3>
+              <h3 className="text-sm md:text-md mb-2 text-white/90">
+                Suitable for daily use, special occasions, and seasonal preferences.
+              </h3> 
             </div>
           </div>
         </div>
@@ -209,27 +206,12 @@ export function FeatureSection() {
           ref={videoSectionRef}
           className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center my-0 py-20"
         >
-          {/* Video */}
-          <div 
-            className={`relative aspect-[4/5] rounded-3xl overflow-hidden blocks-shadow transition-all duration-700 ease-out ${
-              isVideoVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-            }`}
-          >
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover"
-            >
-              <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/0c826034-d4f2-4d4f-8e99-50e94e4ce63f-dG1CBOjR36xFPTbhcROrHbomGXtlTQ.mp4" type="video/mp4" />
-            </video>
-          </div>
+          
 
           {/* Content */}
           <div
             ref={headerRef}
-            className={`transition-all duration-700 ease-out ${
+            className={`transition-all duration-700 ease-out text-center ${
               isVideoVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}
             style={{ transitionDelay: '100ms' }}
@@ -240,7 +222,7 @@ export function FeatureSection() {
             <h2 className={`font-serif text-4xl leading-tight text-foreground mb-6 text-balance md:text-7xl ${headerVisible ? 'animate-blur-in opacity-0' : 'opacity-0'}`} style={headerVisible ? { animationDelay: '0.4s', animationFillMode: 'forwards' } : {}}>
               Care that breathes.
             </h2>
-            <p className={`text-lg text-muted-foreground leading-relaxed mb-10 max-w-md ${headerVisible ? 'animate-blur-in opacity-0' : 'opacity-0'}`} style={headerVisible ? { animationDelay: '0.6s', animationFillMode: 'forwards' } : {}}>
+            <p className={`text-lg text-muted-foreground leading-relaxed mb-10  ${headerVisible ? 'animate-blur-in opacity-0' : 'opacity-0'}`} style={headerVisible ? { animationDelay: '0.6s', animationFillMode: 'forwards' } : {}}>
               We believe skincare should be a gentle ritual, not a complicated routine. 
               Every product is crafted with intention and love for your skin.
             </p>
@@ -250,7 +232,7 @@ export function FeatureSection() {
               {features.map((feature) => (
                 <div
                   key={feature.title}
-                  className="group p-5 blocks-transition hover:scale-[1.02] rounded-md bg-white"
+                  className="group p-5 blocks-transition hover:scale-[1.02] rounded-md border border-muted/50 hover:bg-background/70 cursor-pointer"
                 >
                   <div className="inline-flex items-center justify-center w-10 h-10 rounded-full mb-3 group-hover:bg-primary/20 blocks-transition bg-stone-50">
                     <feature.icon className="w-5 h-5 text-primary" />
@@ -260,6 +242,23 @@ export function FeatureSection() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Video */}
+          <div 
+            className={` relative aspect-[4/5] rounded-3xl overflow-hidden blocks-shadow transition-all duration-700 ease-out ${
+              isVideoVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+            }`}
+          >
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            >
+              <source src="https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/feature-WOHu9u8Rlj90v6ytwrsmnNluBvDtTE" type="video/mp4" />
+            </video>
           </div>
         </div>
       </div>

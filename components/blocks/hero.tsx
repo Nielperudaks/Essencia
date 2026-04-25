@@ -25,10 +25,10 @@ export function Hero() {
             objectFit: 'cover'
           }}
         >
-          <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/f3d8cad2-8091-4809-aac0-eaac74b0be7c-Z4XUCz3CRR7qjaOsoq6rFmbJfIRdgs.mp4" type="video/mp4" />
+          <source src="https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/HeroSpray" type="video/mp4" />
         </video>
         {/* Bottom fade gradient */}
-        <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-background via-background/50 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-[100%] bg-gradient-to-t from-background via-background/30 to-background/10" />
       </div>
 
       {/* Content */}
@@ -36,21 +36,21 @@ export function Hero() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="w-full lg:max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
             <span className="text-sm uppercase mb-6 block text-black animate-blur-in opacity-0 tracking-normal" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-              Natural Skincare
+              Essencia Originals
             </span>
-            <h2 className="font-serif text-5xl md:text-6xl lg:text-7xl leading-[1.1] mb-6 text-balance text-black">
-              <span className="block animate-blur-in opacity-0 font-semibold" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>Glow gently.</span>
-              <span className="block animate-blur-in opacity-0 font-semibold xl:text-9xl text-7xl" style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>Naturally you.</span>
+            <h2 className="font-serif text-5xl md:text-6xl lg:text-7xl leading-[1.1] mb-6 text-balance text-black/90">
+              <span className="block animate-blur-in opacity-0 font-semibold" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>Defined by</span>
+              <span className="block animate-blur-in opacity-0 font-semibold xl:text-[12rem] text-6xl" style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>Elegance</span>
             </h2>
             <p className="text-lg leading-relaxed mb-10 max-w-md mx-auto lg:mx-0 text-black animate-blur-in opacity-0" style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
-              Discover skincare that breathes with you. Pure ingredients, gentle rituals, radiant results.
+              Curated fragrances, makeup essentials, and fashion pieces made to complement your lifestyle.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-blur-in opacity-0" style={{ animationDelay: '1s', animationFillMode: 'forwards' }}>
               <Link
                 href="/shop"
                 className="group inline-flex items-center justify-center gap-3 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm tracking-wide blocks-transition hover:bg-primary/90 blocks-shadow"
               >
-                Shop Now
+                Explore Collection
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 blocks-transition" />
               </Link>
             </div>

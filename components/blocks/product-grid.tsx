@@ -6,9 +6,49 @@ import Link from "next/link"
 import { ShoppingBag } from "lucide-react"
 import { useCart } from "./cart-context"
 
-type Category = "cream" | "oil" | "serum"
+type Category = "Perfumes" | "Makeup" | "Others"
 
 const products = [
+  {
+    id: "fantasy-orange",
+    name: "Fantasy Orange Eau de Toilette",
+    description: "Bright citrus top notes with a warm amber base",
+    price: 899,
+    originalPrice: null,
+    image: "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/Gemini_Generated_Image_pt8vt0pt8vt0pt8v.png",
+    badge: "Bestseller",
+    category: "Perfumes" as Category
+  },
+  {
+    id: "fantasy-blue",
+    name: "Fantasy Blue Eau de Toilette",
+    description: "Fresh aquatic top notes with a woody base",
+    price: 899,
+    originalPrice: null,
+    image: "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/Gemini_Generated_Image_3c7o4h3c7o4h3c7o.png",
+    badge: "Bestseller",
+    category: "Perfumes" as Category
+  },
+  {
+    id: "fantasy-extreme",
+    name: "Fantasy Extreme Eau de Toilette",
+    description: "Intense floral heart with a smoky base",
+    price: 1299,
+    originalPrice: null,
+    image: "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/Gemini_Generated_Image_pcwldfpcwldfpcwl.png",
+    badge: "Bestseller",
+    category: "Perfumes" as Category
+  },
+  {
+    id: "fantasy-poppy",
+    name: "Fantasy Poppy Eau de Toilette",
+    description: "Floral top notes with a warm vanilla base",
+    price: 1099,
+    originalPrice: null,
+    image: "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/Gemini_Generated_Image_jxuuqpjxuuqpjxuu.png",
+    badge: "Bestseller",
+    category: "Perfumes" as Category
+  },
   // Serums
   {
     id: "radiance-serum",
@@ -135,13 +175,13 @@ const products = [
 ]
 
 const categories = [
-  { value: "cream" as Category, label: "Cream" },
-  { value: "oil" as Category, label: "Oil" },
-  { value: "serum" as Category, label: "Serum" }
+  { value: "Perfumes" as Category, label: "Perfumes" },
+  { value: "Makeup" as Category, label: "Makeup" },
+  { value: "Skincare" as Category, label: "Skincare" }
 ]
 
 export function ProductGrid() {
-  const [selectedCategory, setSelectedCategory] = useState<Category>("cream")
+  const [selectedCategory, setSelectedCategory] = useState<Category>("Perfumes")
   const [isVisible, setIsVisible] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [headerVisible, setHeaderVisible] = useState(false)
@@ -231,7 +271,7 @@ export function ProductGrid() {
             <div
               className="absolute top-1 bottom-1 bg-foreground rounded-full transition-all duration-300 ease-out shadow-sm"
               style={{
-                left: selectedCategory === 'cream' ? '4px' : selectedCategory === 'oil' ? 'calc(33.333% + 2px)' : 'calc(66.666%)',
+                left: selectedCategory === 'Perfumes' ? '4px' : selectedCategory === 'Makeup' ? 'calc(33.333% + 2px)' : 'calc(66.666%)',
                 width: 'calc(33.333% - 4px)'
               }}
             />

@@ -40,7 +40,7 @@ export function CTABanner() {
         >
           {/* Background Image */}
           <Image
-            src="/images/bf965cf4-e728-4e72-ab1b-16b1cd8f1822.png"
+            src="https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/Gemini_Generated_Image_8aez548aez548aez223.png"
             alt="Natural ingredients"
             fill
             className="object-cover"

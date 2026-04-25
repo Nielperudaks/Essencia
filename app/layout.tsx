@@ -1,8 +1,9 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
-import { DM_Sans, Playfair_Display } from 'next/font/google'
+import { DM_Sans, Playfair_Display, Merriweather, Work_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/components/blocks/cart-context'
+
 import './globals.css'
 
 const dmSans = DM_Sans({ 
@@ -16,6 +17,20 @@ const playfairDisplay = Playfair_Display({
   variable: '--font-playfair',
   weight: ['400', '500', '600', '700']
 });
+
+const merriweather = Merriweather({ 
+  subsets: ["latin"],
+  variable: '--font-merriweather',
+  weight: ['400', '500', '600', '700']
+});
+
+const workSans = Work_Sans({ 
+  subsets: ["latin"],
+  variable: '--font-work-sans',
+  weight: ['300', '400', '500', '600']
+});
+
+
 
 export const metadata: Metadata = {
   title: 'blocks — Natural Skincare',
@@ -52,7 +67,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${dmSans.variable} ${playfairDisplay.variable} font-sans antialiased`}>
+      <body className={`${dmSans.variable} ${playfairDisplay.variable} ${merriweather.variable} font-sans antialiased`}>
         <CartProvider>
           {children}
         </CartProvider>

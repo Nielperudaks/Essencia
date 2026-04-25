@@ -38,17 +38,17 @@ export function Header() {
             >
               About
             </Link>
-            <Link
+            {/* <Link
               href="/"
               className="text-sm tracking-wide text-foreground/70 hover:text-foreground blocks-transition"
             >
               Ingredients
-            </Link>
+            </Link> */}
           </div>
 
           {/* Logo */}
           <Link href="/" className="absolute left-1/2 -translate-x-1/2">
-            <h1 className="font-serif text-3xl tracking-wider text-foreground">blocks</h1>
+            <h1 className="font-serif text-3xl tracking-wider text-foreground">Essencia</h1>
           </Link>
 
           {/* Right Actions */}
@@ -60,13 +60,13 @@ export function Header() {
             >
               <Search className="w-5 h-5" />
             </button>
-            <Link
+            {/* <Link
               href="/account"
               className="hidden sm:block p-2 text-foreground/70 hover:text-foreground blocks-transition"
               aria-label="Account"
             >
               <User className="w-5 h-5" />
-            </Link>
+            </Link> */}
             <button
               type="button"
               onClick={() => setIsOpen(true)}
