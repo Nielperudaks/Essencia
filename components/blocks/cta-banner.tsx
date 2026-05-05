@@ -40,17 +40,19 @@ export function CTABanner() {
         >
           {/* Background Image */}
           <Image
-            src="https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/Gemini_Generated_Image_8aez548aez548aez223.png"
+            src="https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/Gemini_Generated_Image_ctf9mbctf9mbctf9.png"
             alt="Natural ingredients"
             fill
             className="object-cover"
           />
+          <div className="absolute inset-0 bg-linear-to-r from-black  to-transparent" />
           
           <div className="relative z-10 text-left max-w-2xl">
+            
             <h3 className="text-4xl md:text-5xl text-white mb-4 lg:text-5xl">
               100% Natural
             </h3>
-            <h3 className="text-3xl md:text-4xl lg:text-5xl text-white/70 mb-8">
+            <h3 className="text-3xl md:text-4xl lg:text-5xl text-white/80 mb-8">
               100% You
             </h3>
             

@@ -21,11 +21,11 @@ export function Newsletter() {
     <section className="py-24 bg-primary">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="font-serif text-4xl leading-tight text-primary-foreground mb-4 text-balance md:text-7xl">
-            Join the ritual
+          <h2 className="font-serif text-4xl leading-tight text-primary-foreground mb-4 text-balance md:text-7xl font-light">
+            Keep in touch with <span className="font-bold">Essencia</span>
           </h2>
           <p className="text-lg text-primary-foreground/80 mb-10">
-            Subscribe for exclusive offers, skincare tips, and early access to new products.
+            Contact us for exclusive offers, skincare tips, and the latest news on our natural products. We promise to keep your inbox fresh and inspiring.
           </p>
 
           {isSubscribed ? (
@@ -47,14 +47,14 @@ export function Newsletter() {
                 type="submit"
                 className="group inline-flex items-center justify-center gap-2 bg-primary-foreground text-primary px-8 py-4 rounded-full text-sm tracking-wide blocks-transition hover:bg-primary-foreground/90"
               >
-                Subscribe
+                Email now!
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 blocks-transition" />
               </button>
             </form>
           )}
 
           <p className="text-sm text-primary-foreground/60 mt-6">
-            Unsubscribe anytime. We respect your inbox.
+            We’re here to help you on your journey to radiant, natural beauty.
           </p>
         </div>
       </div>
