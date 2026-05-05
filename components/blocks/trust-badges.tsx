@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Dna, TrendingUp, Sparkles, Flower2,  } from "lucide-react"
+import { Dna, TrendingUp, Sparkles, Flower2, Repeat,  } from "lucide-react"
 
 const badges = [
   {
@@ -11,18 +11,18 @@ const badges = [
   },
   {
     icon: TrendingUp,
-    title: "Proven Performance",
+    title: "Formulated for Longevity",
     description: "Always stay fresh and radiant"
   },
   {
     icon: Sparkles,
-    title: "Premium Ingredients",
+    title: "Superior Ingredients",
     description: "Carefully hand-picked ingredients"
   },
   {
-    icon: Flower2,
-    title: "Vegan Formula",
-    description: "Plant-powered skincare"
+    icon: Repeat,
+    title: "Unrivalled Versatility",
+    description: "Perfect for any Occasions"
   }
 ]
 

@@ -31,7 +31,7 @@ export function Footer() {
       {/* Giant Background Text */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-none select-none z-0">
         <span className="font-serif text-[200px] sm:text-[200px] md:text-[400px] lg:text-[400px] xl:text-[400px] font-bold text-white/20 whitespace-nowrap leading-none">
-          blocks
+          Essencia
         </span>
       </div>
       
@@ -39,13 +39,13 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <h2 className="font-serif text-3xl text-foreground mb-4">blocks</h2>
+            <h2 className="font-serif text-3xl text-foreground mb-4">Essencia</h2>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6">
               Natural skincare for those who believe beauty should feel as good as it looks.
             </p>
             <div className="flex gap-4">
               <a
-                href="https://x.com/Kerroudjm"
+                href="/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground blocks-transition blocks-shadow"
@@ -54,7 +54,7 @@ export function Footer() {
                 <Instagram className="w-4 h-4" />
               </a>
               <a
-                href="https://x.com/Kerroudjm"
+                href="/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground blocks-transition blocks-shadow"
@@ -63,7 +63,7 @@ export function Footer() {
                 <Facebook className="w-4 h-4" />
               </a>
               <a
-                href="https://x.com/Kerroudjm"
+                href="/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground blocks-transition blocks-shadow"
@@ -130,7 +130,7 @@ export function Footer() {
         <div className="pt-10 border-t border-border/50">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} blocks. All rights reserved.
+              © {new Date().getFullYear()} Essencia. All rights reserved.
             </p>
             <div className="flex gap-6">
               <Link href="/" className="text-sm text-muted-foreground hover:text-foreground blocks-transition">
