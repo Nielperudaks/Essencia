@@ -136,7 +136,7 @@ export function FeatureSection() {
                 </div> */}
                 
                 <div>
-                  <h2 className="text-4xl text-foreground mb-2 font-bold">
+                  <h2 className="text-2xl md:text-4xl text-foreground mb-2 font-bold">
                     100% <span className="">Performance</span>
                   </h2>
                   <p className="text-sm text-muted-foreground leading-relaxed">
