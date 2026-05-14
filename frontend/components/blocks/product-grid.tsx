@@ -5,182 +5,19 @@ import Image from "next/image"
 import Link from "next/link"
 import { ShoppingBag } from "lucide-react"
 import { useCart } from "./cart-context"
+import { api, type Product } from "@/lib/api"
 
-type Category = "Perfumes" | "Makeup" | "Others"
-
-const products = [
-  {
-    id: "acqua-di-gio",
-    name: "Acqua di Gio Eau de Parfum",
-    description: "Bright citrus and marine freshness with soft woods and musk.",
-    price: 399,
-    originalPrice: null,
-    image: "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/perfumes/acqua_di_gio.png",
-    badge: "Bestseller",
-    category: "Perfumes" as Category
-  },
-  {
-    id: "versace-eros",
-    name: "Versace Eros Eau de Parfum",
-    description: "Minty apple sweetness with creamy vanilla and warm woods.",
-    price: 399,
-    originalPrice: null,
-    image: "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/perfumes/versace_eros.png",
-    badge: "Bestseller",
-    category: "Perfumes" as Category
-  },
-  {
-    id: "creed-aventus",
-    name: "Creed Aventus Eau de Parfum",
-    description: "Juicy pineapple and smoky birch with rich musk and oakmoss.",
-    price: 399,
-    originalPrice: null,
-    image: "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/perfumes/aventus.png",
-    badge: "Bestseller",
-    category: "Perfumes" as Category
-  },
-  {
-    id: "pacco-rabanne-one-mil",
-    name: "Paco Rabanne 1 Million Eau de Parfum",
-    description: "Sweet citrus and cinnamon spice with a warm leather base.",
-    price: 399,
-    originalPrice: null,
-    image: "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/perfumes/pacco_rabanne_one_mil.png",
-    badge: "Bestseller",
-    category: "Perfumes" as Category
-  },
-  // Serums
-  {
-    id: "radiance-serum",
-    name: "Radiance Serum",
-    description: "Vitamin C brightening formula",
-    price: 68,
-    originalPrice: null,
-    image: "/images/products/serum-bottles-1.png",
-    badge: "Bestseller",
-    category: "serum" as Category
-  },
-  {
-    id: "hydrating-serum",
-    name: "Hydrating Serum",
-    description: "Hyaluronic acid moisture boost",
-    price: 62,
-    originalPrice: null,
-    image: "/images/products/eye-serum-bottles.png",
-    badge: null,
-    category: "serum" as Category
-  },
-  {
-    id: "age-defense-serum",
-    name: "Age Defense Serum",
-    description: "Retinol & peptide complex",
-    price: 78,
-    originalPrice: null,
-    image: "/images/products/amber-dropper-bottles.png",
-    badge: "New",
-    category: "serum" as Category
-  },
-  {
-    id: "glow-serum",
-    name: "Glow Serum",
-    description: "Niacinamide brightening boost",
-    price: 58,
-    originalPrice: 68,
-    image: "/images/products/spray-bottles.png",
-    badge: "Sale",
-    category: "serum" as Category
-  },
-  // Creams
-  {
-    id: "hydra-cream",
-    name: "Hydra Cream",
-    description: "Deep moisture with hyaluronic acid",
-    price: 54,
-    originalPrice: null,
-    image: "/images/products/cream-jars-colored.png",
-    badge: null,
-    category: "cream" as Category
-  },
-  {
-    id: "gentle-cleanser",
-    name: "Gentle Cleanser",
-    description: "Soothing botanical wash",
-    price: 38,
-    originalPrice: 48,
-    image: "/images/products/tube-bottles.png",
-    badge: "Sale",
-    category: "cream" as Category
-  },
-  {
-    id: "night-cream",
-    name: "Night Cream",
-    description: "Restorative overnight treatment",
-    price: 64,
-    originalPrice: null,
-    image: "/images/products/jars-wooden-lid.png",
-    badge: "Bestseller",
-    category: "cream" as Category
-  },
-  {
-    id: "day-cream-spf",
-    name: "Day Cream SPF 30",
-    description: "Protection & hydration",
-    price: 58,
-    originalPrice: null,
-    image: "/images/products/pump-bottles-lavender.png",
-    badge: null,
-    category: "cream" as Category
-  },
-  // Oils
-  {
-    id: "renewal-oil",
-    name: "Renewal Oil",
-    description: "Nourishing facial oil blend",
-    price: 72,
-    originalPrice: null,
-    image: "/images/products/amber-dropper-bottles.png",
-    badge: "New",
-    category: "oil" as Category
-  },
-  {
-    id: "rosehip-oil",
-    name: "Rosehip Oil",
-    description: "Pure organic rosehip extract",
-    price: 48,
-    originalPrice: null,
-    image: "/images/products/serum-bottles-1.png",
-    badge: null,
-    category: "oil" as Category
-  },
-  {
-    id: "jojoba-oil",
-    name: "Jojoba Oil",
-    description: "Balancing & lightweight",
-    price: 42,
-    originalPrice: null,
-    image: "/images/products/spray-bottles.png",
-    badge: null,
-    category: "oil" as Category
-  },
-  {
-    id: "argan-oil",
-    name: "Argan Oil",
-    description: "Moroccan beauty elixir",
-    price: 56,
-    originalPrice: null,
-    image: "/images/products/pump-bottles-cream.png",
-    badge: "Bestseller",
-    category: "oil" as Category
-  }
-]
+type Category = "Perfumes" | "Makeup" | "Skincare"
 
 const categories = [
   { value: "Perfumes" as Category, label: "Perfumes" },
   { value: "Makeup" as Category, label: "Makeup" },
-  { value: "Skincare" as Category, label: "Skincare" }
+  { value: "Skincare" as Category, label: "Skincare" },
 ]
 
 export function ProductGrid() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<Category>("Perfumes")
   const [isVisible, setIsVisible] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
@@ -188,70 +25,44 @@ export function ProductGrid() {
   const gridRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
   const { addItem } = useCart()
-  
-  const filteredProducts = products.filter(product => product.category === selectedCategory)
+
+  useEffect(() => {
+    api.listProducts()
+      .then((data) => setProducts(data))
+      .catch(() => setProducts([]))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const filteredProducts = products.filter(p => p.category === selectedCategory)
 
   const handleCategoryChange = (category: Category) => {
     if (category !== selectedCategory) {
       setIsTransitioning(true)
       setTimeout(() => {
         setSelectedCategory(category)
-        setTimeout(() => {
-          setIsTransitioning(false)
-        }, 50)
+        setTimeout(() => setIsTransitioning(false), 50)
       }, 300)
     }
   }
 
-  // Preload all product images on mount
   useEffect(() => {
-    products.forEach((product) => {
-      const img = new window.Image()
-      img.src = product.image
-    })
-  }, [])
-
-  useEffect(() => {
-    const gridObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    const headerObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setHeaderVisible(true)
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    if (gridRef.current) {
-      gridObserver.observe(gridRef.current)
-    }
-
-    if (headerRef.current) {
-      headerObserver.observe(headerRef.current)
-    }
-
+    const gridObserver = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setIsVisible(true)
+    }, { threshold: 0.1 })
+    const headerObserver = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setHeaderVisible(true)
+    }, { threshold: 0.1 })
+    if (gridRef.current) gridObserver.observe(gridRef.current)
+    if (headerRef.current) headerObserver.observe(headerRef.current)
     return () => {
-      if (gridRef.current) {
-        gridObserver.unobserve(gridRef.current)
-      }
-      if (headerRef.current) {
-        headerObserver.unobserve(headerRef.current)
-      }
+      gridObserver.disconnect()
+      headerObserver.disconnect()
     }
   }, [])
 
   return (
-    <section className="py-24 bg-card">
+    <section className="py-24 bg-card" data-testid="product-grid-section">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        {/* Header */}
         <div ref={headerRef} className="text-center mb-16">
           <span className={`text-sm tracking-[0.3em] uppercase text-primary mb-4 block ${headerVisible ? 'animate-blur-in opacity-0' : 'opacity-0'}`} style={headerVisible ? { animationDelay: '0.2s', animationFillMode: 'forwards' } : {}}>
             Our Collection
@@ -260,14 +71,12 @@ export function ProductGrid() {
             Gentle essentials
           </h2>
           <p className={`text-lg text-muted-foreground max-w-md mx-auto ${headerVisible ? 'animate-blur-in opacity-0' : 'opacity-0'}`} style={headerVisible ? { animationDelay: '0.6s', animationFillMode: 'forwards' } : {}}>
-            Thoughtfully crafted products for your daily skincare ritual
+            Thoughtfully crafted products for your daily ritual
           </p>
         </div>
 
-        {/* Segmented Control */}
         <div className="flex justify-center mb-12">
           <div className="inline-flex bg-background rounded-full p-1 gap-1 relative">
-            {/* Animated background slide */}
             <div
               className="absolute top-1 bottom-1 bg-foreground rounded-full transition-all duration-300 ease-out shadow-sm"
               style={{
@@ -279,6 +88,7 @@ export function ProductGrid() {
               <button
                 key={category.value}
                 type="button"
+                data-testid={`category-tab-${category.value.toLowerCase()}`}
                 onClick={() => handleCategoryChange(category.value)}
                 className={`relative z-10 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
                   selectedCategory === category.value
@@ -292,22 +102,26 @@ export function ProductGrid() {
           </div>
         </div>
 
-        {/* Product Grid */}
-        <div 
-          ref={gridRef}
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
-          {filteredProducts.map((product, index) => (
+        <div ref={gridRef} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="products-grid">
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="aspect-square bg-muted rounded-3xl animate-pulse" />
+            ))
+          ) : filteredProducts.length === 0 ? (
+            <div className="col-span-full text-center py-16 text-muted-foreground" data-testid="no-products">
+              No products in this category yet.
+            </div>
+          ) : filteredProducts.map((product, index) => (
             <Link
               key={`${selectedCategory}-${product.id}`}
               href={`/product/${product.id}`}
+              data-testid={`product-card-${product.id}`}
               className={`group transition-all duration-500 ease-out ${
                 isVisible && !isTransitioning ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
               }`}
               style={{ transitionDelay: isTransitioning ? '0ms' : `${index * 80}ms` }}
             >
               <div className="bg-background rounded-3xl overflow-hidden blocks-shadow blocks-transition group-hover:scale-[1.02]">
-                {/* Image */}
                 <div className="relative aspect-square bg-muted overflow-hidden">
                   <Image
                     src={product.image || "/placeholder.svg"}
@@ -315,7 +129,6 @@ export function ProductGrid() {
                     fill
                     className="object-cover blocks-transition group-hover:scale-105"
                   />
-                  {/* Badge */}
                   {product.badge && (
                     <span
                       className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs tracking-wide bg-white text-black ${
@@ -329,9 +142,9 @@ export function ProductGrid() {
                       {product.badge}
                     </span>
                   )}
-                  {/* Quick add button */}
                   <button
                     type="button"
+                    data-testid={`quick-add-${product.id}`}
                     className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 blocks-transition blocks-shadow"
                     onClick={(e) => {
                       e.preventDefault()
@@ -341,7 +154,8 @@ export function ProductGrid() {
                         name: product.name,
                         description: product.description,
                         price: product.price,
-                        image: product.image
+                        image: product.image,
+                        size: product.size,
                       })
                     }}
                     aria-label="Add to cart"
@@ -349,11 +163,9 @@ export function ProductGrid() {
                     <ShoppingBag className="w-4 h-4 text-foreground" />
                   </button>
                 </div>
-
-                {/* Info */}
                 <div className="p-5">
                   <h3 className="font-serif text-lg text-foreground mb-1">{product.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">{product.description}</p>
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{product.description}</p>
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-foreground">${product.price}</span>
                     {product.originalPrice && (
@@ -368,10 +180,10 @@ export function ProductGrid() {
           ))}
         </div>
 
-        {/* View All Button */}
         <div className="text-center mt-12">
           <Link
             href="/shop"
+            data-testid="view-all-products-btn"
             className="inline-flex items-center justify-center gap-2 bg-transparent border border-foreground/20 text-foreground px-8 py-4 rounded-full text-sm tracking-wide blocks-transition hover:bg-foreground/5"
           >
             View All Products

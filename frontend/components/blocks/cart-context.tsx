@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
 export interface CartItem {
   id: string
@@ -9,6 +9,7 @@ export interface CartItem {
   price: number
   quantity: number
   image: string
+  size?: string
 }
 
 interface CartContextType {
@@ -24,10 +25,30 @@ interface CartContextType {
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
+const STORAGE_KEY = "essencia.cart"
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
+
+  // Load from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) setItems(JSON.parse(raw))
+    } catch {}
+    setHydrated(true)
+  }, [])
+
+  // Persist
+  useEffect(() => {
+    if (hydrated) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+      } catch {}
+    }
+  }, [items, hydrated])
 
   const addItem = (newItem: Omit<CartItem, "quantity">) => {
     setItems(currentItems => {

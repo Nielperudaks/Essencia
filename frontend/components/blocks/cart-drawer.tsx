@@ -2,6 +2,7 @@
 
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import {
   Drawer,
   DrawerClose,
@@ -123,12 +124,14 @@ export function CartDrawer() {
             </div>
 
             {/* Checkout Button */}
-            <button
-              type="button"
-              className="w-full bg-primary text-primary-foreground py-4 rounded-full font-medium hover:bg-primary/90 blocks-transition"
+            <Link
+              href="/payment"
+              onClick={() => setIsOpen(false)}
+              data-testid="checkout-btn"
+              className="w-full inline-flex items-center justify-center bg-primary text-primary-foreground py-4 rounded-full font-medium hover:bg-primary/90 blocks-transition"
             >
               Checkout
-            </button>
+            </Link>
 
             <DrawerClose asChild>
               <button
