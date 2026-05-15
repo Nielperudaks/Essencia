@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Package, CreditCard, ClipboardList, LogOut, Plus, Pencil, Trash2, Check, X, Eye, Bell } from "lucide-react"
+import { Package, CreditCard, ClipboardList, LogOut, Plus, Pencil, Trash2, Check, X, Eye, Bell, Truck } from "lucide-react"
 import { useAdminAuth } from "@/components/admin/admin-auth-context"
 import { api, fileToBase64, type Product, type Bank, type Order } from "@/lib/api"
 
@@ -126,6 +126,16 @@ function OrdersPanel({ orders, token, onRefresh }: { orders: Order[]; token: str
       setBusy(false)
     }
   }
+  async function ship(id: string, waybill: string) {
+    setBusy(true)
+    try {
+      await api.confirmShipping(token, id, waybill)
+      onRefresh()
+      setSelected(null)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
     <div data-testid="orders-panel">
@@ -185,7 +195,14 @@ function OrdersPanel({ orders, token, onRefresh }: { orders: Order[]; token: str
       )}
 
       {selected && (
-        <OrderDrawer order={selected} onClose={() => setSelected(null)} onConfirm={() => confirm(selected.id)} onReject={() => reject(selected.id)} busy={busy} />
+        <OrderDrawer
+          order={selected}
+          onClose={() => setSelected(null)}
+          onConfirm={() => confirm(selected.id)}
+          onReject={() => reject(selected.id)}
+          onShip={(waybill) => ship(selected.id, waybill)}
+          busy={busy}
+        />
       )}
     </div>
   )
@@ -195,12 +212,41 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     pending: "bg-amber-100 text-amber-800",
     confirmed: "bg-green-100 text-green-800",
+    shipped: "bg-blue-100 text-blue-800",
+    received: "bg-teal-100 text-teal-800",
     rejected: "bg-red-100 text-red-800",
   }
   return <span className={`px-2.5 py-1 rounded-full text-xs ${map[status] || "bg-muted text-foreground"}`}>{status}</span>
 }
 
-function OrderDrawer({ order, onClose, onConfirm, onReject, busy }: { order: Order; onClose: () => void; onConfirm: () => void; onReject: () => void; busy: boolean }) {
+function OrderDrawer({
+  order,
+  onClose,
+  onConfirm,
+  onReject,
+  onShip,
+  busy,
+}: {
+  order: Order
+  onClose: () => void
+  onConfirm: () => void
+  onReject: () => void
+  onShip: (waybill: string) => void
+  busy: boolean
+}) {
+  const [shippingWaybill, setShippingWaybill] = useState(order.waybill || "")
+  const [shippingError, setShippingError] = useState<string | null>(null)
+
+  function submitShipping() {
+    const trimmed = shippingWaybill.trim()
+    if (!trimmed) {
+      setShippingError("Waybill is required")
+      return
+    }
+    setShippingError(null)
+    onShip(trimmed)
+  }
+
   return (
     <div className="fixed inset-0 bg-foreground/50 z-50 flex items-center justify-center p-4" onClick={onClose} data-testid="order-detail-modal">
       <div className="bg-card rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -215,8 +261,16 @@ function OrderDrawer({ order, onClose, onConfirm, onReject, busy }: { order: Ord
             <Field label="Customer" value={order.customer_name} />
             <Field label="Email" value={order.customer_email} />
             <Field label="Phone" value={order.customer_phone || "—"} />
+            <Field label="Facebook" value={order.facebook_account || "—"} />
             <Field label="Bank" value={order.bank_name} />
-            <Field label="Address" value={order.customer_address || "—"} />
+            <Field label="Shipping Mode" value={order.shipping_mode || "—"} />
+            <Field label="Waybill" value={order.waybill || "—"} />
+            <Field label="Province" value={order.province || "—"} />
+            <Field label="Town/City" value={order.town_city || "—"} />
+            <Field label="Barangay" value={order.barangay || "—"} />
+            <Field label="Street/House No." value={order.street_house_no || "—"} />
+            <Field label="Zipcode" value={order.zipcode || "—"} />
+            <Field label="Full Address" value={order.customer_address || "—"} />
             <Field label="Created" value={new Date(order.created_at).toLocaleString()} />
           </div>
 
@@ -276,6 +330,30 @@ function OrderDrawer({ order, onClose, onConfirm, onReject, busy }: { order: Ord
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-destructive text-white py-3 rounded-full font-medium hover:opacity-90 disabled:opacity-50"
               >
                 <X className="w-4 h-4" /> Reject
+              </button>
+            </div>
+          )}
+
+          {order.status === "confirmed" && (
+            <div className="bg-background rounded-2xl p-4 space-y-3">
+              <h4 className="font-medium">Shipment</h4>
+              <input
+                type="text"
+                value={shippingWaybill}
+                onChange={(e) => setShippingWaybill(e.target.value)}
+                placeholder="Waybill *"
+                className="w-full px-4 py-3 rounded-full bg-card border border-border focus:outline-none focus:border-primary"
+                data-testid="shipping-waybill-input"
+              />
+              {shippingError && <p className="text-sm text-destructive">{shippingError}</p>}
+              <button
+                type="button"
+                onClick={submitShipping}
+                disabled={busy}
+                data-testid="confirm-shipping-btn"
+                className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-full font-medium hover:bg-blue-700 disabled:opacity-50"
+              >
+                <Truck className="w-4 h-4" /> Confirm Shipping
               </button>
             </div>
           )}

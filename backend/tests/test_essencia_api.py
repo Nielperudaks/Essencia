@@ -245,7 +245,13 @@ class TestOrders:
             "customer_name": "TEST Customer",
             "customer_email": "test_customer@example.com",
             "customer_phone": "+1234567890",
-            "customer_address": "123 Test Lane",
+            "province": "Cavite",
+            "town_city": "Dasmarinas",
+            "barangay": "Burol",
+            "street_house_no": "123 Test Lane",
+            "zipcode": "4114",
+            "facebook_account": "facebook.com/test.customer",
+            "shipping_mode": "LBC",
             "items": [
                 {"id": "acqua-di-gio", "name": "Acqua di Gio", "description": "", "price": 399, "quantity": 1, "image": "", "size": "100ml"}
             ],
@@ -265,6 +271,9 @@ class TestOrders:
         assert body["status"] == "pending"
         assert body["id"]
         assert body["customer_email"] == "test_customer@example.com"
+        assert body["province"] == "Cavite"
+        assert body["shipping_mode"] == "LBC"
+        assert body["waybill"] == ""
         assert body["total"] == 399.0
         TestOrders.order_id_confirm = body["id"]
 
@@ -284,6 +293,28 @@ class TestOrders:
         r = session.post(f"{BASE_URL}/api/admin/orders/{oid}/confirm", headers=auth_headers)
         assert r.status_code == 200
         assert r.json()["status"] == "confirmed"
+
+    def test_confirm_shipping(self, session, auth_headers):
+        oid = TestOrders.order_id_confirm
+        r = session.post(
+            f"{BASE_URL}/api/admin/orders/{oid}/ship",
+            json={"waybill": "TEST-WAYBILL-123"},
+            headers=auth_headers,
+        )
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["status"] == "shipped"
+        assert body["waybill"] == "TEST-WAYBILL-123"
+
+    def test_public_order_status_and_receive(self, session):
+        oid = TestOrders.order_id_confirm
+        r = session.get(f"{BASE_URL}/api/orders/{oid}")
+        assert r.status_code == 200
+        assert r.json()["status"] == "shipped"
+
+        rr = session.post(f"{BASE_URL}/api/orders/{oid}/receive")
+        assert rr.status_code == 200
+        assert rr.json()["status"] == "received"
 
     def test_reject_order(self, session, auth_headers):
         bank_id = self._ensure_bank(session, auth_headers)

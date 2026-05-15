@@ -37,15 +37,25 @@ export type Order = {
   customer_email: string
   customer_phone: string
   customer_address: string
+  province: string
+  town_city: string
+  barangay: string
+  street_house_no: string
+  zipcode: string
+  facebook_account: string
+  waybill: string
+  shipping_mode: "LBC" | "J&T"
   items: OrderItem[]
   subtotal: number
   total: number
   bank_id: string | null
   bank_name: string
   payment_proof: string
-  status: "pending" | "confirmed" | "rejected"
+  status: "pending" | "confirmed" | "rejected" | "shipped" | "received"
   created_at: string
   confirmed_at: string | null
+  shipped_at: string | null
+  received_at: string | null
 }
 
 async function http<T>(path: string, opts: RequestInit = {}): Promise<T> {
@@ -85,6 +95,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  getPublicOrder: (id: string) => http<Order>(`/api/orders/${id}`),
+  markOrderReceived: (id: string) =>
+    http<Order>(`/api/orders/${id}/receive`, { method: "POST" }),
 
   // admin
   login: (email: string, password: string) =>
@@ -138,6 +151,12 @@ export const api = {
     http<Order>(`/api/admin/orders/${id}/confirm`, {
       method: "POST",
       headers: authHeaders(token),
+    }),
+  confirmShipping: (token: string, id: string, waybill: string) =>
+    http<Order>(`/api/admin/orders/${id}/ship`, {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify({ waybill }),
     }),
   rejectOrder: (token: string, id: string) =>
     http<Order>(`/api/admin/orders/${id}/reject`, {

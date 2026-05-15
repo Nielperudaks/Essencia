@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, Check, X } from "lucide-react"
+import { ChevronLeft, Check, Truck, X } from "lucide-react"
 import { useAdminAuth } from "@/components/admin/admin-auth-context"
 import { api, type Order } from "@/lib/api"
 
@@ -15,6 +15,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [waybill, setWaybill] = useState("")
 
   useEffect(() => {
     if (authLoading) return
@@ -53,6 +54,18 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
     }
   }
 
+  async function confirmShipping() {
+    if (!token || !waybill.trim()) return
+    setBusy(true)
+    try {
+      const updated = await api.confirmShipping(token, id, waybill.trim())
+      setOrder(updated)
+      setWaybill("")
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-background" data-testid="admin-order-detail">
       <header className="border-b border-border bg-card">
@@ -76,7 +89,15 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                 <Info label="Name" value={order.customer_name} />
                 <Info label="Email" value={order.customer_email} />
                 <Info label="Phone" value={order.customer_phone || "—"} />
-                <Info label="Address" value={order.customer_address || "—"} />
+                <Info label="Facebook" value={order.facebook_account || "—"} />
+                <Info label="Shipping Mode" value={order.shipping_mode || "—"} />
+                <Info label="Waybill" value={order.waybill || "—"} />
+                <Info label="Province" value={order.province || "—"} />
+                <Info label="Town/City" value={order.town_city || "—"} />
+                <Info label="Barangay" value={order.barangay || "—"} />
+                <Info label="Street/House No." value={order.street_house_no || "—"} />
+                <Info label="Zipcode" value={order.zipcode || "—"} />
+                <Info label="Full Address" value={order.customer_address || "—"} />
               </div>
             </div>
 
@@ -117,6 +138,8 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
             <h2 className="font-serif text-2xl mb-4">Status</h2>
             <div className={`inline-block px-4 py-2 rounded-full text-sm mb-5 ${
               order.status === "confirmed" ? "bg-green-100 text-green-800"
+              : order.status === "shipped" ? "bg-blue-100 text-blue-800"
+              : order.status === "received" ? "bg-teal-100 text-teal-800"
               : order.status === "rejected" ? "bg-red-100 text-red-800"
               : "bg-amber-100 text-amber-800"
             }`} data-testid="order-status">
@@ -132,9 +155,25 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                   <X className="w-4 h-4" /> Reject
                 </button>
               </div>
+            ) : order.status === "confirmed" ? (
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  value={waybill}
+                  onChange={(e) => setWaybill(e.target.value)}
+                  placeholder="Waybill *"
+                  className="w-full px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary"
+                  data-testid="shipping-waybill-input"
+                />
+                <button type="button" onClick={confirmShipping} disabled={busy || !waybill.trim()} data-testid="confirm-shipping-btn" className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-full font-medium hover:bg-blue-700 disabled:opacity-50">
+                  <Truck className="w-4 h-4" /> Confirm Shipping
+                </button>
+              </div>
             ) : (
               <p className="text-sm text-muted-foreground">
-                {order.confirmed_at && `Confirmed on ${new Date(order.confirmed_at).toLocaleString()}`}
+                {order.received_at && `Received on ${new Date(order.received_at).toLocaleString()}`}
+                {!order.received_at && order.shipped_at && `Shipped on ${new Date(order.shipped_at).toLocaleString()}`}
+                {!order.received_at && !order.shipped_at && order.confirmed_at && `Confirmed on ${new Date(order.confirmed_at).toLocaleString()}`}
               </p>
             )}
           </aside>

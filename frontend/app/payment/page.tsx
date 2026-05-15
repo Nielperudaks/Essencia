@@ -10,6 +10,10 @@ import { Footer } from "@/components/blocks/footer"
 import { useCart } from "@/components/blocks/cart-context"
 import { api, fileToBase64, type Bank } from "@/lib/api"
 
+type ShippingMode = "LBC" | "J&T"
+
+const SHIPPING_MODES: ShippingMode[] = ["LBC", "J&T"]
+
 export default function PaymentPage() {
   const router = useRouter()
   const { items, subtotal, removeItem, updateQuantity, clearCart } = useCart()
@@ -20,7 +24,13 @@ export default function PaymentPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
-  const [address, setAddress] = useState("")
+  const [province, setProvince] = useState("")
+  const [townCity, setTownCity] = useState("")
+  const [barangay, setBarangay] = useState("")
+  const [streetHouseNo, setStreetHouseNo] = useState("")
+  const [zipcode, setZipcode] = useState("")
+  const [facebookAccount, setFacebookAccount] = useState("")
+  const [shippingMode, setShippingMode] = useState<ShippingMode>("LBC")
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -54,8 +64,20 @@ export default function PaymentPage() {
       setError("Your cart is empty")
       return
     }
-    if (!name || !email) {
-      setError("Please provide your name and email")
+    const requiredFields = [
+      name,
+      email,
+      phone,
+      province,
+      townCity,
+      barangay,
+      streetHouseNo,
+      zipcode,
+      facebookAccount,
+      shippingMode,
+    ]
+    if (requiredFields.some((field) => !field.trim())) {
+      setError("Please complete all required customer and shipping fields")
       return
     }
     const proof = proofByBank[bankId]
@@ -69,7 +91,13 @@ export default function PaymentPage() {
         customer_name: name,
         customer_email: email,
         customer_phone: phone,
-        customer_address: address,
+        province,
+        town_city: townCity,
+        barangay,
+        street_house_no: streetHouseNo,
+        zipcode,
+        facebook_account: facebookAccount,
+        shipping_mode: shippingMode,
         items: items.map((i) => ({
           id: i.id,
           name: i.name,
@@ -175,8 +203,34 @@ export default function PaymentPage() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <input type="text" placeholder="Full name *" value={name} onChange={(e) => setName(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-customer-name" />
                   <input type="email" placeholder="Email *" value={email} onChange={(e) => setEmail(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-customer-email" />
-                  <input type="text" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-customer-phone" />
-                  <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-customer-address" />
+                  <input type="text" placeholder="Phone *" value={phone} onChange={(e) => setPhone(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-customer-phone" />
+                  <input type="text" placeholder="Facebook account *" value={facebookAccount} onChange={(e) => setFacebookAccount(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-facebook-account" />
+                  <input type="text" placeholder="Province *" value={province} onChange={(e) => setProvince(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-province" />
+                  <input type="text" placeholder="Town/City *" value={townCity} onChange={(e) => setTownCity(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-town-city" />
+                  <input type="text" placeholder="Barangay *" value={barangay} onChange={(e) => setBarangay(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-barangay" />
+                  <input type="text" placeholder="Street/house no. *" value={streetHouseNo} onChange={(e) => setStreetHouseNo(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-street-house-no" />
+                  <input type="text" placeholder="Zipcode *" value={zipcode} onChange={(e) => setZipcode(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-zipcode" />
+                  <div className="sm:col-span-2">
+                    <label htmlFor="shipping-mode" className="text-sm font-medium text-foreground mb-2 block">
+                      Shipping Mode *
+                    </label>
+                    <select
+                      id="shipping-mode"
+                      value={shippingMode}
+                      onChange={(e) => setShippingMode(e.target.value as ShippingMode)}
+                      className="w-full px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary"
+                      data-testid="select-shipping-mode"
+                    >
+                      {SHIPPING_MODES.map((mode) => (
+                        <option key={mode} value={mode}>{mode}</option>
+                      ))}
+                    </select>
+                    <p className="mt-2 text-xs text-muted-foreground" data-testid="shipping-mode-note">
+                      {shippingMode === "LBC"
+                        ? "Shipping fee will be COD or COP."
+                        : "Shipping fee will be COD."}
+                    </p>
+                  </div>
                 </div>
               </section>
 
@@ -292,7 +346,7 @@ export default function PaymentPage() {
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Shipping</span>
-                  <span>Free</span>
+                  <span>COD / COP</span>
                 </div>
                 <div className="border-t border-border pt-3 flex justify-between text-base font-medium text-foreground">
                   <span>Total</span>

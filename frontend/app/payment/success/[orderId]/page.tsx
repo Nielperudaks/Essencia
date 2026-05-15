@@ -2,7 +2,7 @@
 
 import { use } from "react"
 import Link from "next/link"
-import { CheckCircle2 } from "lucide-react"
+import { CheckCircle2, Search } from "lucide-react"
 import { Header } from "@/components/blocks/header"
 import { Footer } from "@/components/blocks/footer"
 
@@ -22,15 +22,25 @@ export default function PaymentSuccessPage({ params }: { params: Promise<{ order
             Order ID: <code className="bg-muted px-2 py-1 rounded">{orderId}</code>
           </p>
           <p className="text-sm text-foreground/80 mb-10">
-            The admin has been notified and will confirm your payment shortly. You&apos;ll receive your products soon.
+            The admin has been notified and will confirm your payment shortly. Please open your email to check your order information and status instructions.
           </p>
-          <Link
-            href="/shop"
-            data-testid="continue-shopping-btn"
-            className="inline-flex items-center justify-center bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm tracking-wide hover:bg-primary/90 blocks-transition"
-          >
-            Continue Shopping
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href={`/status?orderId=${orderId}`}
+              data-testid="check-status-btn"
+              className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-sm tracking-wide hover:bg-primary/90 blocks-transition"
+            >
+              <Search className="w-4 h-4" />
+              Check Order Status
+            </Link>
+            <Link
+              href="/shop"
+              data-testid="continue-shopping-btn"
+              className="inline-flex items-center justify-center border border-border px-8 py-4 rounded-full text-sm tracking-wide hover:bg-muted blocks-transition"
+            >
+              Continue Shopping
+            </Link>
+          </div>
         </div>
       </div>
       <Footer />
