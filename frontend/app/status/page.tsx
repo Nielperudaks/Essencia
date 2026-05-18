@@ -6,7 +6,7 @@ import Link from "next/link"
 import { CheckCircle2, ClipboardList, PackageCheck, Search, Truck } from "lucide-react"
 import { Header } from "@/components/blocks/header"
 import { Footer } from "@/components/blocks/footer"
-import { api, type Order } from "@/lib/api"
+import { api, wsUrl, type Order } from "@/lib/api"
 
 const STATUS_STEPS = [
   { key: "pending", label: "Payment submitted" },
@@ -46,6 +46,23 @@ function StatusContent() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
+
+  useEffect(() => {
+    if (!order?.id) return
+    let active = true
+    const socket = new WebSocket(wsUrl(`/ws/orders/${order.id}`))
+    socket.onmessage = (event) => {
+      if (!active) return
+      const message = JSON.parse(event.data) as { order?: Order }
+      if (message.order?.id === order.id) {
+        setOrder(message.order)
+      }
+    }
+    return () => {
+      active = false
+      socket.close()
+    }
+  }, [order?.id])
 
   async function lookup(id = orderId) {
     const trimmed = id.trim()

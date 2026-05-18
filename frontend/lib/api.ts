@@ -1,4 +1,5 @@
 export const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || ""
+export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || ""
 
 export type Product = {
   id: string
@@ -163,6 +164,17 @@ export const api = {
       method: "POST",
       headers: authHeaders(token),
     }),
+}
+
+export function wsUrl(path: string): string {
+  const explicit = WS_URL.replace(/\/$/, "")
+  if (explicit) return `${explicit}${path}`
+  if (API_URL.startsWith("http")) return `${API_URL.replace(/^http/, "ws").replace(/\/$/, "")}${path}`
+  if (typeof window !== "undefined") {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
+    return `${protocol}//${window.location.host}${path}`
+  }
+  return path
 }
 
 export function fileToBase64(file: File): Promise<string> {

@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Package, CreditCard, ClipboardList, LogOut, Plus, Pencil, Trash2, Check, X, Eye, Bell, Truck } from "lucide-react"
 import { useAdminAuth } from "@/components/admin/admin-auth-context"
-import { api, fileToBase64, type Product, type Bank, type Order } from "@/lib/api"
+import { api, fileToBase64, wsUrl, type Product, type Bank, type Order } from "@/lib/api"
 
 type Tab = "products" | "banks" | "orders"
 
@@ -26,13 +26,27 @@ export default function AdminDashboard() {
     api.listOrders(token).then(setOrders).catch(() => {})
   }, [token, refreshTick])
 
-  // poll orders every 15s
   useEffect(() => {
     if (!token) return
-    const id = setInterval(() => {
-      api.listOrders(token).then(setOrders).catch(() => {})
-    }, 15000)
-    return () => clearInterval(id)
+    let active = true
+    const socket = new WebSocket(wsUrl(`/ws/admin?token=${encodeURIComponent(token)}`))
+    socket.onmessage = (event) => {
+      if (!active) return
+      const message = JSON.parse(event.data) as { type?: string }
+      if (message.type?.startsWith("order.")) {
+        api.listOrders(token).then(setOrders).catch(() => {})
+      }
+      if (message.type === "products.changed") {
+        api.listProducts().then(setProducts).catch(() => {})
+      }
+      if (message.type === "banks.changed") {
+        api.listBanks().then(setBanks).catch(() => {})
+      }
+    }
+    return () => {
+      active = false
+      socket.close()
+    }
   }, [token])
 
   if (loading || !token || !admin) return null

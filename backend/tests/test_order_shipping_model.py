@@ -8,7 +8,9 @@ from pydantic import ValidationError
 
 
 def _server_module():
-    os.environ.setdefault("DATABASE_URL", "postgresql://example")
+    os.environ.setdefault("MONGODB_URI", "mongodb://localhost:27017")
+    os.environ.setdefault("MONGODB_DB", "essencia_test")
+    os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
     os.environ.setdefault("RESEND_API_KEY", "test")
     os.environ.setdefault("SENDER_EMAIL", "sender@example.com")
     os.environ.setdefault("ADMIN_EMAIL", "admin@example.com")

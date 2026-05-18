@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ChevronLeft, Check, Truck, X } from "lucide-react"
 import { useAdminAuth } from "@/components/admin/admin-auth-context"
-import { api, type Order } from "@/lib/api"
+import { api, wsUrl, type Order } from "@/lib/api"
 
 export default function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -25,6 +25,23 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
       .catch((e) => setError((e as Error).message))
       .finally(() => setLoading(false))
   }, [id, token, authLoading])
+
+  useEffect(() => {
+    if (!order?.id) return
+    let active = true
+    const socket = new WebSocket(wsUrl(`/ws/orders/${order.id}`))
+    socket.onmessage = (event) => {
+      if (!active) return
+      const message = JSON.parse(event.data) as { order?: Order }
+      if (message.order?.id === order.id) {
+        setOrder(message.order)
+      }
+    }
+    return () => {
+      active = false
+      socket.close()
+    }
+  }, [order?.id])
 
   if (authLoading || loading) {
     return <main className="min-h-screen flex items-center justify-center"><div className="text-muted-foreground">Loading...</div></main>

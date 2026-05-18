@@ -6,9 +6,10 @@
 ## Architecture
 - **Frontend**: Next.js 16 (App Router, React 19, Tailwind v4) — `/app/frontend/`. Served via `next build` + `next start` in production mode on port 3000.
 - **Backend**: FastAPI on port 8001 — `/app/backend/server.py`.
-- **Database**: Neon Postgres (managed). Connection string in `/app/backend/.env` (`DATABASE_URL`).
+- **Database**: MongoDB. Local development uses `docker-compose.yml` with `MONGODB_URI=mongodb://localhost:27017` and `MONGODB_DB=essencia`.
+- **Realtime**: Redis pub/sub plus FastAPI WebSockets. Local development uses `REDIS_URL=redis://localhost:6379/0`.
 - **Email**: Resend API (`onboarding@resend.dev` sender, test mode — only delivers to account-owner email).
-- **Image Storage**: All admin/customer-uploaded images stored as base64 inside Postgres (no external blob storage).
+- **Image Storage**: All admin/customer-uploaded images stored as base64 inside MongoDB documents (no external blob storage).
 
 ## User Personas
 - **Customer**: Browses products, adds to cart, checks out via the /payment page, uploads payment proof.
@@ -16,8 +17,8 @@
 
 ## Tech Stack
 - Frontend: Next.js 16, React 19, Tailwind v4, shadcn/ui, Motion, Lucide
-- Backend: FastAPI, asyncpg, bcrypt, PyJWT, resend
-- DB: Postgres (Neon, asyncpg pool)
+- Backend: FastAPI, Motor, Redis asyncio client, bcrypt, PyJWT, resend
+- DB: MongoDB collections (`admins`, `products`, `banks`, `orders`)
 - Auth: JWT (7-day expiry), bcrypt-hashed passwords
 
 ## Implemented Features (Session 1 — May 12, 2026)
@@ -28,7 +29,8 @@
 - Products: `GET /api/products`, `GET /api/products/{id}`, admin CRUD `POST/PUT/DELETE /api/admin/products[/id]`
 - Banks: `GET /api/banks`, admin CRUD `POST/PUT/DELETE /api/admin/banks[/id]`
 - Orders: `POST /api/orders` (public), `GET /api/admin/orders`, `GET /api/admin/orders/{id}`, `POST /api/admin/orders/{id}/confirm`, `POST /api/admin/orders/{id}/reject`
-- Auto-seeds admin from env `ADMIN_EMAIL/ADMIN_PASSWORD` and four perfume products on startup.
+- Auto-seeds admin from env `ADMIN_EMAIL/ADMIN_PASSWORD`, four perfume products, and a starter GCash payment method on startup.
+- Publishes order/product/bank changes over Redis and exposes WebSocket routes for realtime admin and order-status updates.
 - Non-blocking Resend email notification to admin on every new order (HTML body with link to `/admin/orders/{id}`).
 
 ### Frontend
@@ -46,14 +48,14 @@
 - Admin order detail `/admin/orders/[id]` — dedicated page linked from notification email
 
 ## Status
-- Backend: 100% tests passing (26/26)
+- Backend: MongoDB/Redis migration in progress with focused unit coverage for document mapping and realtime routing.
 - Frontend: ~95% E2E coverage passing (testing agent iteration 2). Full checkout flow verified.
 
 ## Known/Deferred Items (Backlog)
 - P2 Add the missing `data-testid="order-detail-page"` and `confirm/reject` testids on `/admin/orders/[id]` for regression coverage.
 - P2 Replace the Vercel Analytics import (`@vercel/analytics`) — currently emits a benign 404 for `/_vercel/insights/script.js`.
 - P2 Add stable UUID-based testids alongside slug-based ones for admin product rows.
-- P2 Switch from base64-in-Postgres to a real blob store (S3/Vercel Blob) when image sizes scale beyond a few MB.
+- P2 Switch from base64-in-MongoDB to a real blob store (S3/Vercel Blob) when image sizes scale beyond a few MB.
 
 ## Next Action Items
 - Customer-facing: order tracking page (lookup by email + order id).
