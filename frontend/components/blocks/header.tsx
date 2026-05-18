@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Menu, X, ShoppingBag, Search, User } from "lucide-react"
+import { Menu, X, ShoppingBag, Search, User, Truck } from "lucide-react"
 import { CartDrawer } from "./cart-drawer"
 import { useCart } from "./cart-context"
 
@@ -53,13 +53,13 @@ export function Header() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              className="p-2 text-foreground/70 hover:text-foreground blocks-transition"
+            <Link
+              href="/status"
+              className="hidden sm:block p-2 text-foreground/70 hover:text-foreground blocks-transition"
               aria-label="Search"
             >
-              <Search className="w-5 h-5" />
-            </button>
+              <Truck className="w-5 h-5" />
+            </Link>
             {/* <Link
               href="/account"
               className="hidden sm:block p-2 text-foreground/70 hover:text-foreground blocks-transition"
