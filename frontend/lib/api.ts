@@ -46,6 +46,7 @@ export type Order = {
   facebook_account: string
   waybill: string
   shipping_mode: "LBC" | "J&T"
+  shipment_fee: number
   items: OrderItem[]
   subtotal: number
   total: number
@@ -153,11 +154,11 @@ export const api = {
       method: "POST",
       headers: authHeaders(token),
     }),
-  confirmShipping: (token: string, id: string, waybill: string) =>
+  confirmShipping: (token: string, id: string, waybill: string, shipmentFee: number) =>
     http<Order>(`/api/admin/orders/${id}/ship`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ waybill }),
+      body: JSON.stringify({ waybill, shipment_fee: shipmentFee }),
     }),
   rejectOrder: (token: string, id: string) =>
     http<Order>(`/api/admin/orders/${id}/reject`, {

@@ -170,7 +170,7 @@ export function ProductGrid() {
                     <span className="font-medium text-foreground">${product.price}</span>
                     {product.originalPrice && (
                       <span className="text-sm text-muted-foreground line-through">
-                        ${product.originalPrice}
+                        ₱{product.originalPrice}
                       </span>
                     )}
                   </div>

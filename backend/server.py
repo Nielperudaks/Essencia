@@ -352,6 +352,7 @@ class OrderIn(BaseModel):
 
 class ShippingConfirmIn(BaseModel):
     waybill: str = Field(..., min_length=1)
+    shipment_fee: float = Field(0, ge=0)
 
 
 # ============== Auth Helpers ==============
@@ -581,6 +582,7 @@ async def create_order(order: OrderIn):
         "items": [i.model_dump() for i in order.items],
         "subtotal": order.subtotal,
         "total": order.total,
+        "shipment_fee": 0,
         "bank_id": order.bank_id,
         "bank_name": order.bank_name,
         "payment_proof": order.payment_proof,
@@ -643,15 +645,44 @@ async def get_order(order_id: str, admin=Depends(get_current_admin)):
 @app.post("/api/admin/orders/{order_id}/confirm")
 async def confirm_order(order_id: str, admin=Depends(get_current_admin)):
     _validate_uuid(order_id)
+    existing = await db.orders.find_one({"_id": order_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if existing.get("stock_deducted"):
+        order_data = _doc_to_order(existing)
+        await publish_event({"type": "order.updated", "order_id": order_id, "order": order_data})
+        return order_data
+
+    deducted: dict[str, int] = {}
+    for item in existing.get("items", []):
+        product_id = item.get("id")
+        quantity = int(item.get("quantity") or 0)
+        if not product_id or quantity <= 0:
+            continue
+        result = await db.products.update_one(
+            {"_id": product_id, "stock": {"$gte": quantity}},
+            {"$inc": {"stock": -quantity}, "$set": {"updated_at": _utc_now()}},
+        )
+        if result.modified_count == 0:
+            for rollback_id, rollback_qty in deducted.items():
+                await db.products.update_one(
+                    {"_id": rollback_id},
+                    {"$inc": {"stock": rollback_qty}, "$set": {"updated_at": _utc_now()}},
+                )
+            raise HTTPException(status_code=400, detail=f"Insufficient stock for {item.get('name') or product_id}")
+        deducted[product_id] = deducted.get(product_id, 0) + quantity
+
     row = await db.orders.find_one_and_update(
         {"_id": order_id},
-        {"$set": {"status": "confirmed", "confirmed_at": _utc_now()}},
+        {"$set": {"status": "confirmed", "confirmed_at": _utc_now(), "stock_deducted": True}},
         return_document=ReturnDocument.AFTER,
     )
-    if not row:
-        raise HTTPException(status_code=404, detail="Order not found")
     order_data = _doc_to_order(row)
     await publish_event({"type": "order.updated", "order_id": order_id, "order": order_data})
+    for product_id in deducted:
+        product_row = await db.products.find_one({"_id": product_id})
+        if product_row:
+            await publish_event({"type": "products.changed", "product": _doc_to_product(product_row)})
     return order_data
 
 
@@ -664,7 +695,7 @@ async def confirm_shipping(order_id: str, payload: ShippingConfirmIn, admin=Depe
     _ensure_order_status(_doc_to_order(existing), "confirmed", "confirm shipping")
     row = await db.orders.find_one_and_update(
         {"_id": order_id},
-        {"$set": {"status": "shipped", "waybill": payload.waybill, "shipped_at": _utc_now()}},
+        {"$set": {"status": "shipped", "waybill": payload.waybill, "shipment_fee": payload.shipment_fee, "shipped_at": _utc_now()}},
         return_document=ReturnDocument.AFTER,
     )
     order_data = _doc_to_order(row)
@@ -763,6 +794,7 @@ def _doc_to_order(r):
         "facebook_account": r.get("facebook_account", ""),
         "waybill": r.get("waybill", ""),
         "shipping_mode": r.get("shipping_mode", ""),
+        "shipment_fee": float(r.get("shipment_fee", 0)),
         "items": r.get("items", []),
         "subtotal": float(r.get("subtotal", 0)),
         "total": float(r.get("total", 0)),
