@@ -10,6 +10,7 @@ export type Product = {
   image: string
   badge: string | null
   category: string
+  gender: "Male" | "Female" | "All Genders"
   stock: number
   size: string
 }
@@ -86,10 +87,13 @@ function authHeaders(token: string | null): Record<string, string> {
 
 export const api = {
   // public
-  listProducts: (category?: string) =>
-    http<Product[]>(
-      `/api/products${category && category !== "all" ? `?category=${encodeURIComponent(category)}` : ""}`
-    ),
+  listProducts: (category?: string, gender?: string) => {
+    const params = new URLSearchParams()
+    if (category && category !== "all") params.set("category", category)
+    if (gender && gender !== "all") params.set("gender", gender)
+    const query = params.toString()
+    return http<Product[]>(`/api/products${query ? `?${query}` : ""}`)
+  },
   getProduct: (id: string) => http<Product>(`/api/products/${id}`),
   listBanks: () => http<Bank[]>(`/api/banks`),
   createOrder: (payload: Record<string, unknown>) =>

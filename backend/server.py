@@ -36,7 +36,7 @@ ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 ADMIN_NAME = os.environ.get("ADMIN_NAME", "Admin")
 JWT_SECRET = os.environ["JWT_SECRET"]
 JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
-APP_URL = os.environ.get("APP_URL", "http://localhost:3000")
+APP_URL = os.environ.get("APP_URL", "http://localhost:3001")
 INSTANCE_ID = uuid.uuid4().hex
 
 resend.api_key = RESEND_API_KEY
@@ -57,6 +57,7 @@ SEED_PRODUCTS = [
         "image": "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/perfumes/acqua_di_gio.png",
         "badge": "Bestseller",
         "category": "Perfumes",
+        "gender": "All Genders",
         "stock": 25,
         "size": "100ml",
     },
@@ -68,6 +69,7 @@ SEED_PRODUCTS = [
         "image": "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/perfumes/versace_eros.png",
         "badge": "Bestseller",
         "category": "Perfumes",
+        "gender": "Male",
         "stock": 18,
         "size": "100ml",
     },
@@ -79,6 +81,7 @@ SEED_PRODUCTS = [
         "image": "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/perfumes/aventus.png",
         "badge": "Bestseller",
         "category": "Perfumes",
+        "gender": "Male",
         "stock": 12,
         "size": "100ml",
     },
@@ -90,6 +93,7 @@ SEED_PRODUCTS = [
         "image": "https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/perfumes/pacco_rabanne_one_mil.png",
         "badge": "Bestseller",
         "category": "Perfumes",
+        "gender": "All Genders",
         "stock": 20,
         "size": "100ml",
     },
@@ -188,6 +192,7 @@ async def _listen_for_redis_events():
 async def init_db():
     await db.admins.create_index("email", unique=True)
     await db.products.create_index("category")
+    await db.products.create_index("gender")
     await db.products.create_index("created_at")
     await db.banks.create_index("created_at")
     await db.orders.create_index("created_at")
@@ -220,6 +225,7 @@ async def init_db():
                     "image": p["image"],
                     "badge": p.get("badge"),
                     "category": p["category"],
+                    "gender": p.get("gender", "All Genders"),
                     "stock": p["stock"],
                     "size": p["size"],
                     "created_at": _utc_now(),
@@ -309,6 +315,7 @@ class ProductIn(BaseModel):
     image: str = ""
     badge: Optional[str] = None
     category: str = "Perfumes"
+    gender: Literal["Male", "Female", "All Genders"] = "All Genders"
     stock: int = 0
     size: str = ""
 
@@ -431,10 +438,12 @@ async def get_me(admin=Depends(get_current_admin)):
 
 # Products ---
 @app.get("/api/products")
-async def list_products(category: Optional[str] = None):
+async def list_products(category: Optional[str] = None, gender: Optional[str] = None):
     query = {}
     if category and category.lower() != "all":
         query["category"] = category
+    if gender and gender.lower() != "all":
+        query["gender"] = gender
     rows = await db.products.find(query).sort("created_at", -1).to_list(length=None)
     return [_doc_to_product(r) for r in rows]
 
@@ -460,6 +469,7 @@ async def create_product(p: ProductIn, admin=Depends(get_current_admin)):
         "image": p.image,
         "badge": p.badge,
         "category": p.category,
+        "gender": p.gender,
         "stock": p.stock,
         "size": p.size,
         "created_at": now,
@@ -487,6 +497,7 @@ async def update_product(product_id: str, p: ProductIn, admin=Depends(get_curren
                 "image": p.image,
                 "badge": p.badge,
                 "category": p.category,
+                "gender": p.gender,
                 "stock": p.stock,
                 "size": p.size,
                 "updated_at": _utc_now(),
@@ -760,6 +771,7 @@ def _doc_to_product(r):
         "image": r.get("image", ""),
         "badge": r.get("badge"),
         "category": r.get("category", "Perfumes"),
+        "gender": r.get("gender", "All Genders"),
         "stock": r.get("stock", 0),
         "size": r.get("size", ""),
     }
@@ -809,10 +821,14 @@ def _doc_to_order(r):
     }
 
 
+def _format_currency(value: float) -> str:
+    return f"₱{value:.2f}"
+
+
 def _items_rows_html(order: dict) -> str:
     return "".join(
         f"<tr><td style='padding:6px 12px;border-bottom:1px solid #eee'>{i['name']} x {i['quantity']}</td>"
-        f"<td style='padding:6px 12px;text-align:right;border-bottom:1px solid #eee'>${i['price'] * i['quantity']:.2f}</td></tr>"
+        f"<td style='padding:6px 12px;text-align:right;border-bottom:1px solid #eee'>{_format_currency(i['price'] * i['quantity'])}</td></tr>"
         for i in order["items"]
     )
 
@@ -828,7 +844,7 @@ def _order_details_html(order: dict) -> str:
         <p style="margin:0 0 4px"><strong>Address:</strong> {order['customer_address']}</p>
         <p style="margin:0 0 4px"><strong>Shipping Mode:</strong> {order['shipping_mode']}</p>
         <p style="margin:0 0 4px"><strong>Waybill:</strong> {order['waybill'] or 'Not available yet'}</p>
-        <p style="margin:0"><strong>Total:</strong> ${order['total']:.2f}</p>
+        <p style="margin:0"><strong>Total:</strong> {_format_currency(order['total'])}</p>
       </div>
     """
 
@@ -851,7 +867,7 @@ async def _notify_admin(order: dict):
           <p style="color:#888;font-size:12px;margin-top:24px">Essencia Admin Notification</p>
         </div>
         """
-        params = {"from": SENDER_EMAIL, "to": [ADMIN_EMAIL], "subject": f"New payment from {order['customer_name']} - ${order['total']:.2f}", "html": html}
+        params = {"from": SENDER_EMAIL, "to": [ADMIN_EMAIL], "subject": f"New payment from {order['customer_name']} - {_format_currency(order['total'])}", "html": html}
         result = await asyncio.to_thread(resend.Emails.send, params)
         logger.info("Notification email sent: %s", result)
     except Exception as e:

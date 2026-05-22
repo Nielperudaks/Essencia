@@ -8,6 +8,7 @@ import { ChevronLeft, Minus, Plus, Leaf, Heart, Award, Recycle, Star, Check } fr
 import { Header } from "@/components/blocks/header"
 import { Footer } from "@/components/blocks/footer"
 import { api, type Product } from "@/lib/api"
+import { formatCurrency } from "@/lib/currency"
 import { useCart } from "@/components/blocks/cart-context"
 
 const benefits = [
@@ -37,7 +38,7 @@ export default function ProductPage() {
   }, [productId])
 
   const handleAddToCart = () => {
-    if (!product) return
+    if (!product || product.stock <= 0) return
     for (let i = 0; i < quantity; i++) {
       addItem({
         id: product.id,
@@ -106,12 +107,22 @@ export default function ProductPage() {
                 className="object-cover"
                 priority
               />
+              {product.stock <= 0 && (
+                <div className="absolute inset-0 bg-background/75 backdrop-blur-[1px] flex items-center justify-center">
+                  <span className="bg-foreground text-background px-5 py-2.5 rounded-full text-sm font-semibold tracking-[0.2em]">
+                    SOLD OUT
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col">
               <div className="mb-8">
                 <span className="text-sm tracking-[0.3em] uppercase text-primary mb-2 block">
                   {product.category}
+                </span>
+                <span className="text-xs tracking-[0.25em] uppercase text-muted-foreground mb-3 block">
+                  {product.gender}
                 </span>
                 <h1 className="font-serif text-4xl md:text-5xl text-foreground mb-3" data-testid="product-name">
                   {product.name}
@@ -130,10 +141,10 @@ export default function ProductPage() {
               </div>
 
               <div className="flex items-center gap-3 mb-6">
-                <span className="text-3xl font-medium text-foreground" data-testid="product-price">${product.price}</span>
+                <span className="text-3xl font-medium text-foreground" data-testid="product-price">{formatCurrency(product.price)}</span>
                 {product.originalPrice && (
                   <span className="text-xl text-muted-foreground line-through">
-                    ${product.originalPrice}
+                    {formatCurrency(product.originalPrice)}
                   </span>
                 )}
               </div>
@@ -190,24 +201,35 @@ export default function ProductPage() {
                 >
                   {isAdded ? (<><Check className="w-4 h-4" /> Added to Cart</>) : "Add to Cart"}
                 </button>
-                <Link
-                  href="/payment"
-                  onClick={() => {
-                    addItem({
-                      id: product.id,
-                      name: product.name,
-                      description: product.description,
-                      price: product.price,
-                      image: product.image,
-                      size: product.size,
-                    })
-                    setIsOpen(false)
-                  }}
-                  data-testid="buy-now-btn"
-                  className="flex-1 inline-flex items-center justify-center gap-2 bg-transparent border border-foreground/20 text-foreground px-8 py-4 rounded-full text-sm tracking-wide blocks-transition hover:bg-foreground/5"
-                >
-                  Buy Now
-                </Link>
+                {product.stock > 0 ? (
+                  <Link
+                    href="/payment"
+                    onClick={() => {
+                      addItem({
+                        id: product.id,
+                        name: product.name,
+                        description: product.description,
+                        price: product.price,
+                        image: product.image,
+                        size: product.size,
+                      })
+                      setIsOpen(false)
+                    }}
+                    data-testid="buy-now-btn"
+                    className="flex-1 inline-flex items-center justify-center gap-2 bg-transparent border border-foreground/20 text-foreground px-8 py-4 rounded-full text-sm tracking-wide blocks-transition hover:bg-foreground/5"
+                  >
+                    Buy Now
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    data-testid="buy-now-btn"
+                    className="flex-1 inline-flex items-center justify-center gap-2 bg-transparent border border-foreground/20 text-foreground px-8 py-4 rounded-full text-sm tracking-wide opacity-50 cursor-not-allowed"
+                  >
+                    Sold Out
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

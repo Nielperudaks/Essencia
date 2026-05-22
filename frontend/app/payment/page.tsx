@@ -9,6 +9,7 @@ import { Header } from "@/components/blocks/header"
 import { Footer } from "@/components/blocks/footer"
 import { useCart } from "@/components/blocks/cart-context"
 import { api, fileToBase64, type Bank } from "@/lib/api"
+import { formatCurrency } from "@/lib/currency"
 
 type ShippingMode = "LBC" | "J&T"
 
@@ -190,7 +191,7 @@ export default function PaymentPage() {
                             </button>
                           </div>
                         </div>
-                        <div className="text-right font-medium">${(item.price * item.quantity).toFixed(2)}</div>
+                        <div className="text-right font-medium">{formatCurrency(item.price * item.quantity)}</div>
                       </div>
                     ))}
                   </div>
@@ -342,7 +343,7 @@ export default function PaymentPage() {
               <div className="space-y-2 text-sm mb-5">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal ({items.length} items)</span>
-                  <span data-testid="summary-subtotal">${subtotal.toFixed(2)}</span>
+                  <span data-testid="summary-subtotal">{formatCurrency(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Shipping</span>
@@ -350,7 +351,7 @@ export default function PaymentPage() {
                 </div>
                 <div className="border-t border-border pt-3 flex justify-between text-base font-medium text-foreground">
                   <span>Total</span>
-                  <span data-testid="summary-total">${total.toFixed(2)}</span>
+                  <span data-testid="summary-total">{formatCurrency(total)}</span>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">

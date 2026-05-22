@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ShoppingBag } from "lucide-react"
 import { useCart } from "./cart-context"
 import { api, type Product } from "@/lib/api"
+import { formatCurrency } from "@/lib/currency"
 
 type Category = "Perfumes" | "Makeup" | "Skincare"
 
@@ -33,7 +34,7 @@ export function ProductGrid() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filteredProducts = products.filter(p => p.category === selectedCategory)
+  const filteredProducts = products.filter(p => p.category === selectedCategory).slice(0, 4)
 
   const handleCategoryChange = (category: Category) => {
     if (category !== selectedCategory) {
@@ -142,13 +143,22 @@ export function ProductGrid() {
                       {product.badge}
                     </span>
                   )}
+                  {product.stock <= 0 && (
+                    <div className="absolute inset-0 z-10 bg-background/75 backdrop-blur-[1px] flex items-center justify-center">
+                      <span className="bg-foreground text-background px-4 py-2 rounded-full text-xs font-semibold tracking-[0.2em]">
+                        SOLD OUT
+                      </span>
+                    </div>
+                  )}
                   <button
                     type="button"
                     data-testid={`quick-add-${product.id}`}
-                    className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 blocks-transition blocks-shadow"
+                    disabled={product.stock <= 0}
+                    className="absolute bottom-4 right-4 z-20 w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 blocks-transition blocks-shadow disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={(e) => {
                       e.preventDefault()
                       e.stopPropagation()
+                      if (product.stock <= 0) return
                       addItem({
                         id: product.id,
                         name: product.name,
@@ -165,12 +175,13 @@ export function ProductGrid() {
                 </div>
                 <div className="p-5">
                   <h3 className="font-serif text-lg text-foreground mb-1">{product.name}</h3>
+                  <p className="text-xs uppercase tracking-[0.18em] text-primary mb-2">{product.gender}</p>
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{product.description}</p>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-foreground">${product.price}</span>
+                    <span className="font-medium text-foreground">{formatCurrency(product.price)}</span>
                     {product.originalPrice && (
                       <span className="text-sm text-muted-foreground line-through">
-                        ₱{product.originalPrice}
+                        {formatCurrency(product.originalPrice)}
                       </span>
                     )}
                   </div>

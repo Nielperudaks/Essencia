@@ -6,6 +6,7 @@ import Image from "next/image"
 import { Package, CreditCard, ClipboardList, LogOut, Plus, Pencil, Trash2, Check, X, Eye, Bell, Truck } from "lucide-react"
 import { useAdminAuth } from "@/components/admin/admin-auth-context"
 import { api, fileToBase64, wsUrl, type Product, type Bank, type Order } from "@/lib/api"
+import { formatCurrency } from "@/lib/currency"
 
 type Tab = "products" | "banks" | "orders"
 
@@ -186,7 +187,7 @@ function OrdersPanel({ orders, token, onRefresh }: { orders: Order[]; token: str
                     <div className="text-xs text-muted-foreground">{o.customer_email}</div>
                   </td>
                   <td className="px-5 py-4">{o.items.reduce((s, i) => s + i.quantity, 0)}</td>
-                  <td className="px-5 py-4 font-medium">${o.total.toFixed(2)}</td>
+                  <td className="px-5 py-4 font-medium">{formatCurrency(o.total)}</td>
                   <td className="px-5 py-4">{o.bank_name}</td>
                   <td className="px-5 py-4">
                     <StatusBadge status={o.status} />
@@ -285,7 +286,7 @@ function OrderDrawer({
             <Field label="Bank" value={order.bank_name} />
             <Field label="Shipping Mode" value={order.shipping_mode || "—"} />
             <Field label="Waybill" value={order.waybill || "—"} />
-            <Field label="Shipment Fee" value={`$${(order.shipment_fee || 0).toFixed(2)}`} />
+            <Field label="Shipment Fee" value={formatCurrency(order.shipment_fee || 0)} />
             <Field label="Province" value={order.province || "—"} />
             <Field label="Town/City" value={order.town_city || "—"} />
             <Field label="Barangay" value={order.barangay || "—"} />
@@ -312,13 +313,13 @@ function OrderDrawer({
                       <div className="text-xs text-muted-foreground">Qty: {i.quantity}</div>
                     </div>
                   </div>
-                  <div className="font-medium text-sm">${(i.price * i.quantity).toFixed(2)}</div>
+                  <div className="font-medium text-sm">{formatCurrency(i.price * i.quantity)}</div>
                 </div>
               ))}
             </div>
             <div className="flex justify-between mt-3 pt-3 border-t border-border font-medium">
               <span>Total</span>
-              <span>${order.total.toFixed(2)}</span>
+              <span>{formatCurrency(order.total)}</span>
             </div>
           </div>
 
@@ -435,6 +436,7 @@ function ProductsPanel({ products, token, onRefresh }: { products: Product[]; to
               <th className="px-5 py-3 font-medium">Image</th>
               <th className="px-5 py-3 font-medium">Name</th>
               <th className="px-5 py-3 font-medium">Category</th>
+              <th className="px-5 py-3 font-medium">Gender</th>
               <th className="px-5 py-3 font-medium">Price</th>
               <th className="px-5 py-3 font-medium">Stock</th>
               <th className="px-5 py-3 font-medium">Size</th>
@@ -443,7 +445,7 @@ function ProductsPanel({ products, token, onRefresh }: { products: Product[]; to
           </thead>
           <tbody>
             {products.length === 0 ? (
-              <tr><td colSpan={7} className="text-center py-10 text-muted-foreground">No products yet.</td></tr>
+              <tr><td colSpan={8} className="text-center py-10 text-muted-foreground">No products yet.</td></tr>
             ) : products.map((p) => (
               <tr key={p.id} className="border-t border-border" data-testid={`product-row-${p.id}`}>
                 <td className="px-5 py-3">
@@ -453,7 +455,8 @@ function ProductsPanel({ products, token, onRefresh }: { products: Product[]; to
                 </td>
                 <td className="px-5 py-3">{p.name}</td>
                 <td className="px-5 py-3">{p.category}</td>
-                <td className="px-5 py-3">₱{p.price}</td>
+                <td className="px-5 py-3">{p.gender}</td>
+                <td className="px-5 py-3">{formatCurrency(p.price)}</td>
                 <td className="px-5 py-3">
                   <span className={p.stock <= 0 ? "text-destructive" : ""}>{p.stock}</span>
                 </td>
@@ -491,6 +494,7 @@ function ProductForm({ token, initial, onClose, onSaved }: { token: string; init
   const [stock, setStock] = useState(initial?.stock?.toString() || "0")
   const [size, setSize] = useState(initial?.size || "")
   const [category, setCategory] = useState(initial?.category || "Perfumes")
+  const [gender, setGender] = useState<Product["gender"]>(initial?.gender || "All Genders")
   const [badge, setBadge] = useState(initial?.badge || "")
   const [image, setImage] = useState(initial?.image || "")
   const [saving, setSaving] = useState(false)
@@ -515,6 +519,7 @@ function ProductForm({ token, initial, onClose, onSaved }: { token: string; init
         stock: parseInt(stock) || 0,
         size,
         category,
+        gender,
         badge: badge || null,
         image,
       }
@@ -548,6 +553,11 @@ function ProductForm({ token, initial, onClose, onSaved }: { token: string; init
               <option value="Makeup">Makeup</option>
               <option value="Skincare">Skincare</option>
               <option value="Others">Others</option>
+            </select>
+            <select data-testid="product-gender-input" className="px-4 py-3 rounded-full bg-background border border-border" value={gender} onChange={(e) => setGender(e.target.value as Product["gender"])}>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="All Genders">All Genders</option>
             </select>
             <select data-testid="product-badge-input" className="px-4 py-3 rounded-full bg-background border border-border sm:col-span-2" value={badge} onChange={(e) => setBadge(e.target.value)}>
               <option value="">No badge</option>

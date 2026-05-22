@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ChevronLeft, Check, Truck, X } from "lucide-react"
 import { useAdminAuth } from "@/components/admin/admin-auth-context"
 import { api, wsUrl, type Order } from "@/lib/api"
+import { formatCurrency } from "@/lib/currency"
 
 export default function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -113,7 +114,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                 <Info label="Facebook" value={order.facebook_account || "—"} />
                 <Info label="Shipping Mode" value={order.shipping_mode || "—"} />
                 <Info label="Waybill" value={order.waybill || "—"} />
-                <Info label="Shipment Fee" value={`$${(order.shipment_fee || 0).toFixed(2)}`} />
+                <Info label="Shipment Fee" value={formatCurrency(order.shipment_fee || 0)} />
                 <Info label="Province" value={order.province || "—"} />
                 <Info label="Town/City" value={order.town_city || "—"} />
                 <Info label="Barangay" value={order.barangay || "—"} />
@@ -134,14 +135,14 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                     )}
                     <div>
                       <p className="font-medium text-sm">{i.name}</p>
-                      <p className="text-xs text-muted-foreground">Qty {i.quantity} × ${i.price}</p>
+                      <p className="text-xs text-muted-foreground">Qty {i.quantity} × {formatCurrency(i.price)}</p>
                     </div>
                   </div>
-                  <span className="font-medium">${(i.price * i.quantity).toFixed(2)}</span>
+                  <span className="font-medium">{formatCurrency(i.price * i.quantity)}</span>
                 </div>
               ))}
               <div className="flex justify-between pt-4 mt-2 border-t border-border font-medium text-lg">
-                <span>Total</span><span>${order.total.toFixed(2)}</span>
+                <span>Total</span><span>{formatCurrency(order.total)}</span>
               </div>
             </div>
 

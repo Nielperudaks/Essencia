@@ -6,6 +6,7 @@ import { CheckCircle2, MessageCircle, Search } from "lucide-react"
 import { Header } from "@/components/blocks/header"
 import { Footer } from "@/components/blocks/footer"
 import { api, type Order } from "@/lib/api"
+import { formatCurrency } from "@/lib/currency"
 
 const FACEBOOK_PAGE = process.env.NEXT_PUBLIC_FACEBOOK_PAGE_USERNAME || process.env.NEXT_PUBLIC_FACEBOOK_PAGE_ID || "essencia"
 
@@ -25,7 +26,7 @@ export default function PaymentSuccessPage({ params }: { params: Promise<{ order
         const size = item.size ? ` (${item.size})` : ""
         return `- ${item.name}${size} x ${item.quantity}`
       }),
-      order ? `Total: $${order.total.toFixed(2)}` : "",
+      order ? `Total: ${formatCurrency(order.total)}` : "",
     ].filter(Boolean)
     return `https://m.me/${encodeURIComponent(FACEBOOK_PAGE)}?text=${encodeURIComponent(lines.join("\n"))}`
   }, [order, orderId])

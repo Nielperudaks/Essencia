@@ -7,6 +7,7 @@ import { CheckCircle2, ClipboardList, PackageCheck, Search, Truck } from "lucide
 import { Header } from "@/components/blocks/header"
 import { Footer } from "@/components/blocks/footer"
 import { api, wsUrl, type Order } from "@/lib/api"
+import { formatCurrency } from "@/lib/currency"
 
 const STATUS_STEPS = [
   { key: "pending", label: "Payment submitted" },
@@ -166,13 +167,13 @@ function StatusContent() {
                           <p className="font-medium text-sm">{item.name}</p>
                           <p className="text-xs text-muted-foreground">Qty {item.quantity}{item.size ? ` • ${item.size}` : ""}</p>
                         </div>
-                        <span className="font-medium text-sm">${(item.price * item.quantity).toFixed(2)}</span>
+                        <span className="font-medium text-sm">{formatCurrency(item.price * item.quantity)}</span>
                       </div>
                     ))}
                   </div>
                   <div className="flex justify-between pt-4 mt-3 border-t border-border font-medium">
                     <span>Total</span>
-                    <span>${order.total.toFixed(2)}</span>
+                    <span>{formatCurrency(order.total)}</span>
                   </div>
                 </div>
               </section>

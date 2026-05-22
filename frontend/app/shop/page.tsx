@@ -7,12 +7,14 @@ import { ShoppingBag, SlidersHorizontal, X } from "lucide-react"
 import { Header } from "@/components/blocks/header"
 import { Footer } from "@/components/blocks/footer"
 import { api, type Product } from "@/lib/api"
+import { formatCurrency } from "@/lib/currency"
 import { useCart } from "@/components/blocks/cart-context"
 
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState("all")
+  const [selectedGender, setSelectedGender] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
   const gridRef = useRef<HTMLDivElement>(null)
@@ -25,10 +27,13 @@ export default function ShopPage() {
   }, [])
 
   const categoriesList = ["all", ...Array.from(new Set(products.map(p => p.category)))]
+  const genderList = ["all", "Male", "Female", "All Genders"]
 
-  const filteredProducts = selectedCategory === "all"
-    ? products
-    : products.filter(p => p.category === selectedCategory)
+  const filteredProducts = products.filter((p) => {
+    const categoryMatch = selectedCategory === "all" || p.category === selectedCategory
+    const genderMatch = selectedGender === "all" || p.gender === selectedGender
+    return categoryMatch && genderMatch
+  })
 
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
@@ -42,7 +47,7 @@ export default function ShopPage() {
     setIsVisible(false)
     const timer = setTimeout(() => setIsVisible(true), 50)
     return () => clearTimeout(timer)
-  }, [selectedCategory])
+  }, [selectedCategory, selectedGender])
 
   return (
     <main className="min-h-screen" data-testid="shop-page">
@@ -71,22 +76,41 @@ export default function ShopPage() {
               Filters
             </button>
 
-            <div className="hidden lg:flex items-center gap-2">
-              {categoriesList.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  data-testid={`shop-category-${category}`}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm capitalize blocks-transition ${
-                    selectedCategory === category
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card text-foreground/70 hover:text-foreground blocks-shadow"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+            <div className="hidden lg:flex items-center gap-5">
+              <div className="flex items-center gap-2">
+                {categoriesList.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    data-testid={`shop-category-${category}`}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-4 py-2 rounded-full text-sm capitalize blocks-transition ${
+                      selectedCategory === category
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-foreground/70 hover:text-foreground blocks-shadow"
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                {genderList.map((gender) => (
+                  <button
+                    key={gender}
+                    type="button"
+                    data-testid={`shop-gender-${gender}`}
+                    onClick={() => setSelectedGender(gender)}
+                    className={`px-4 py-2 rounded-full text-sm blocks-transition ${
+                      selectedGender === gender
+                        ? "bg-foreground text-background"
+                        : "bg-card text-foreground/70 hover:text-foreground blocks-shadow"
+                    }`}
+                  >
+                    {gender === "all" ? "All" : gender}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <span className="text-sm text-muted-foreground" data-testid="product-count">
@@ -107,7 +131,9 @@ export default function ShopPage() {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Category</div>
                   {categoriesList.map((category) => (
                     <button
                       key={category}
@@ -125,6 +151,27 @@ export default function ShopPage() {
                       {category}
                     </button>
                   ))}
+                  </div>
+                  <div className="space-y-3">
+                    <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Gender</div>
+                    {genderList.map((gender) => (
+                      <button
+                        key={gender}
+                        type="button"
+                        onClick={() => {
+                          setSelectedGender(gender)
+                          setShowFilters(false)
+                        }}
+                        className={`w-full px-6 py-4 rounded-2xl text-left blocks-transition ${
+                          selectedGender === gender
+                            ? "bg-foreground text-background"
+                            : "bg-card text-foreground blocks-shadow"
+                        }`}
+                      >
+                        {gender === "all" ? "All" : gender}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -158,6 +205,7 @@ export default function ShopPage() {
 function ProductCard({ product, index, isVisible }: { product: Product; index: number; isVisible: boolean }) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const { addItem } = useCart()
+  const isSoldOut = product.stock <= 0
   return (
     <Link
       href={`/product/${product.id}`}
@@ -196,12 +244,21 @@ function ProductCard({ product, index, isVisible }: { product: Product; index: n
               {product.badge}
             </span>
           )}
+          {isSoldOut && (
+            <div className="absolute inset-0 z-10 bg-background/75 backdrop-blur-[1px] flex items-center justify-center">
+              <span className="bg-foreground text-background px-4 py-2 rounded-full text-xs font-semibold tracking-[0.2em]">
+                SOLD OUT
+              </span>
+            </div>
+          )}
           <button
             type="button"
-            className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 blocks-transition blocks-shadow"
+            disabled={isSoldOut}
+            className="absolute bottom-4 right-4 z-20 w-12 h-12 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 blocks-transition blocks-shadow disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
+              if (isSoldOut) return
               addItem({
                 id: product.id,
                 name: product.name,
@@ -218,12 +275,13 @@ function ProductCard({ product, index, isVisible }: { product: Product; index: n
         </div>
         <div className="p-6">
           <h3 className="font-serif text-xl text-foreground mb-1">{product.name}</h3>
+          <p className="text-xs uppercase tracking-[0.18em] text-primary mb-2">{product.gender}</p>
           <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{product.description}</p>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-medium text-foreground">${product.price}</span>
+            <span className="text-lg font-medium text-foreground">{formatCurrency(product.price)}</span>
             {product.originalPrice && (
               <span className="text-sm text-muted-foreground line-through">
-                ${product.originalPrice}
+                {formatCurrency(product.originalPrice)}
               </span>
             )}
           </div>
