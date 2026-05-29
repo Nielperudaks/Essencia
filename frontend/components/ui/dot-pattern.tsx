@@ -102,8 +102,8 @@ export function DotPattern({
       return {
         x: col * width + cx + x,
         y: row * height + cy + y,
-        delay: Math.random() * 5,
-        duration: Math.random() * 3 + 2,
+        delay: deterministicValue(i, 5),
+        duration: deterministicValue(i + 17, 3) + 2,
       }
     }
   )
@@ -155,4 +155,9 @@ export function DotPattern({
       ))}
     </svg>
   )
+}
+
+function deterministicValue(seed: number, max: number) {
+  const value = Math.sin(seed * 12.9898) * 43758.5453
+  return (value - Math.floor(value)) * max
 }

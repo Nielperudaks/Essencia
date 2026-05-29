@@ -26,7 +26,7 @@ const STATUS_INDEX: Record<Order["status"], number> = {
 
 export default function StatusPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen"><Header /><div className="pt-40 text-center text-muted-foreground">Loading...</div><Footer /></main>}>
+    <Suspense fallback={<main className="min-h-screen bg-background"><Header /><div className="pt-40 text-center text-muted-foreground">Loading...</div><Footer /></main>}>
       <StatusContent />
     </Suspense>
   )
@@ -102,16 +102,21 @@ function StatusContent() {
   }
 
   return (
-    <main className="min-h-screen" data-testid="status-page">
+    <main className="min-h-screen bg-background" data-testid="status-page">
       <Header />
-      <div className="pt-28 pb-24">
-        <div className="max-w-5xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <span className="text-sm tracking-[0.3em] uppercase text-primary mb-3 block">Order Status</span>
-            <h1 className="font-serif text-4xl md:text-5xl text-foreground">Track Your Order</h1>
+      <div className="pt-32 pb-24">
+        <div className="mx-auto w-full max-w-5xl px-5 sm:px-6 lg:px-8">
+          <div className="mb-10 grid gap-6 lg:grid-cols-[1fr_320px] lg:items-end">
+            <div>
+              <span className="storefront-kicker">Order Status</span>
+              <h1 className="storefront-heading">Track your order.</h1>
+            </div>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Enter your order ID to follow confirmation, shipping, and receipt in real time.
+            </p>
           </div>
 
-          <section className="bg-card rounded-3xl p-6 blocks-shadow mb-8">
+          <section className="storefront-card mb-8 p-6">
             <label htmlFor="order-id" className="text-sm font-medium text-foreground mb-2 block">
               Order ID
             </label>
@@ -122,28 +127,28 @@ function StatusContent() {
                 value={orderId}
                 onChange={(e) => setOrderId(e.target.value)}
                 placeholder="Enter your order ID"
-                className="flex-1 px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary"
+                className="storefront-input flex-1"
                 data-testid="order-id-input"
               />
               <button
                 type="button"
                 onClick={() => lookup()}
                 disabled={loading}
-                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-7 py-3 rounded-full font-medium hover:bg-primary/90 disabled:opacity-50"
+                className="storefront-button px-7"
                 data-testid="lookup-order-btn"
               >
                 <Search className="w-4 h-4" />
                 {loading ? "Checking..." : "Confirm"}
               </button>
             </div>
-            {error && <div className="mt-4 text-sm text-destructive bg-destructive/10 px-4 py-3 rounded-2xl" data-testid="status-error">{error}</div>}
+            {error && <div className="mt-4 border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive" data-testid="status-error">{error}</div>}
           </section>
 
           {order && (
             <div className="grid lg:grid-cols-[1fr_360px] gap-8" data-testid="order-status-details">
               <section className="space-y-6">
-                <div className="bg-card rounded-3xl p-6 blocks-shadow">
-                  <h2 className="font-serif text-2xl mb-4">Order Details</h2>
+                <div className="storefront-card p-6">
+                  <h2 className="mb-4 font-serif text-3xl font-semibold">Order details</h2>
                   <div className="grid sm:grid-cols-2 gap-4 text-sm">
                     <Info label="Order ID" value={order.id} />
                     <Info label="Status" value={order.status} />
@@ -158,11 +163,11 @@ function StatusContent() {
                   </div>
                 </div>
 
-                <div className="bg-card rounded-3xl p-6 blocks-shadow">
-                  <h2 className="font-serif text-2xl mb-4">Items</h2>
+                <div className="storefront-card p-6">
+                  <h2 className="mb-4 font-serif text-3xl font-semibold">Items</h2>
                   <div className="space-y-3">
                     {order.items.map((item, idx) => (
-                      <div key={`${item.id}-${idx}`} className="flex items-center justify-between bg-background rounded-2xl p-3">
+                      <div key={`${item.id}-${idx}`} className="flex items-center justify-between border border-border bg-background p-3">
                         <div>
                           <p className="font-medium text-sm">{item.name}</p>
                           <p className="text-xs text-muted-foreground">Qty {item.quantity}{item.size ? ` • ${item.size}` : ""}</p>
@@ -178,14 +183,14 @@ function StatusContent() {
                 </div>
               </section>
 
-              <aside className="bg-card rounded-3xl p-6 blocks-shadow h-fit">
-                <h2 className="font-serif text-2xl mb-5">Progress</h2>
+              <aside className="storefront-card h-fit p-6">
+                <h2 className="mb-5 font-serif text-3xl font-semibold">Progress</h2>
                 <div className="space-y-4 mb-6">
                   {STATUS_STEPS.map((step, index) => {
                     const active = order.status !== "rejected" && index <= STATUS_INDEX[order.status]
                     return (
                       <div key={step.key} className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center ${active ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
+                        <div className={`flex h-9 w-9 items-center justify-center border ${active ? "border-foreground bg-foreground text-background" : "border-border bg-muted text-muted-foreground"}`}>
                           {index === 0 && <ClipboardList className="w-4 h-4" />}
                           {index === 1 && <CheckCircle2 className="w-4 h-4" />}
                           {index === 2 && <Truck className="w-4 h-4" />}
@@ -198,7 +203,7 @@ function StatusContent() {
                 </div>
 
                 {order.status === "rejected" && (
-                  <p className="text-sm text-destructive bg-destructive/10 p-4 rounded-2xl mb-5">This order was rejected. Please contact the store for help.</p>
+                  <p className="mb-5 border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">This order was rejected. Please contact the store for help.</p>
                 )}
 
                 {order.status === "shipped" && (
@@ -206,7 +211,7 @@ function StatusContent() {
                     type="button"
                     onClick={markReceived}
                     disabled={receiving}
-                    className="w-full inline-flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-full font-medium hover:bg-green-700 disabled:opacity-50"
+                    className="storefront-button w-full"
                     data-testid="order-received-btn"
                   >
                     <PackageCheck className="w-4 h-4" />
@@ -215,10 +220,10 @@ function StatusContent() {
                 )}
 
                 {order.status === "received" && (
-                  <p className="text-sm text-green-700 bg-green-100 p-4 rounded-2xl">Thank you. This order has been marked as received.</p>
+                  <p className="border border-foreground bg-background p-4 text-sm text-foreground">Thank you. This order has been marked as received.</p>
                 )}
 
-                <Link href="/shop" className="mt-4 inline-flex w-full items-center justify-center border border-border py-3 rounded-full text-sm hover:bg-muted">
+                <Link href="/shop" className="storefront-button-outline mt-4 w-full">
                   Continue Shopping
                 </Link>
               </aside>

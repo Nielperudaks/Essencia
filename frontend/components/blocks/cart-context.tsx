@@ -27,28 +27,26 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined)
 const STORAGE_KEY = "essencia.cart"
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
-  const [isOpen, setIsOpen] = useState(false)
-  const [hydrated, setHydrated] = useState(false)
+function readStoredCart(): CartItem[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    return raw ? JSON.parse(raw) as CartItem[] : []
+  } catch {
+    return []
+  }
+}
 
-  // Load from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) setItems(JSON.parse(raw))
-    } catch {}
-    setHydrated(true)
-  }, [])
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<CartItem[]>(readStoredCart)
+  const [isOpen, setIsOpen] = useState(false)
 
   // Persist
   useEffect(() => {
-    if (hydrated) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-      } catch {}
-    }
-  }, [items, hydrated])
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+    } catch {}
+  }, [items])
 
   const addItem = (newItem: Omit<CartItem, "quantity">) => {
     setItems(currentItems => {

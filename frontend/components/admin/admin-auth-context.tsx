@@ -16,24 +16,25 @@ type Ctx = {
 const AdminAuthContext = createContext<Ctx | undefined>(undefined)
 const STORAGE_KEY = "essencia.admin"
 
+function readStoredAdmin(): { admin: Admin | null; token: string | null } {
+  if (typeof window === "undefined") return { admin: null, token: null }
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return { admin: null, token: null }
+    const data = JSON.parse(raw) as { admin?: Admin; token?: string }
+    return { admin: data.admin ?? null, token: data.token ?? null }
+  } catch {
+    return { admin: null, token: null }
+  }
+}
+
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  const [admin, setAdmin] = useState<Admin | null>(null)
-  const [token, setToken] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [session, setSession] = useState(readStoredAdmin)
+  const admin = session.admin
+  const token = session.token
+  const loading = false
   const router = useRouter()
   const pathname = usePathname()
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const data = JSON.parse(raw)
-        setToken(data.token)
-        setAdmin(data.admin)
-      }
-    } catch {}
-    setLoading(false)
-  }, [])
 
   useEffect(() => {
     if (loading) return
@@ -45,14 +46,12 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   async function login(email: string, password: string) {
     const res = await api.login(email, password)
-    setToken(res.access_token)
-    setAdmin(res.admin)
+    setSession({ token: res.access_token, admin: res.admin })
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: res.access_token, admin: res.admin }))
   }
 
   function logout() {
-    setToken(null)
-    setAdmin(null)
+    setSession({ token: null, admin: null })
     localStorage.removeItem(STORAGE_KEY)
     router.push("/admin/login")
   }
