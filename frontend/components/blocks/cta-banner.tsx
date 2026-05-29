@@ -45,7 +45,7 @@ export function CTABanner() {
             fill
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-linear-to-r from-black  to-transparent" />
+          <div className="absolute inset-0 bg-black/80" />
           
           <div className="relative z-10 text-left max-w-2xl">
             

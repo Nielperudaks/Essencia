@@ -35,7 +35,7 @@ export default function PaymentSuccessPage({ params }: { params: Promise<{ order
     <main className="min-h-screen" data-testid="payment-success-page">
       <Header />
       <div className="pt-40 pb-32">
-        <div className="max-w-xl mx-auto px-6 text-center">
+        <div className="max-w-2xl mx-auto px-6 text-center">
           <div className="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-6">
             <CheckCircle2 className="w-12 h-12 text-green-600" />
           </div>

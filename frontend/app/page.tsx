@@ -17,7 +17,7 @@ export default function HomePage() {
       <ProductGrid />
       <FeatureSection />
       <Testimonials />
-      <CTABanner />
+      {/* <CTABanner /> */}
       <Newsletter />
       <Footer />
     </main>

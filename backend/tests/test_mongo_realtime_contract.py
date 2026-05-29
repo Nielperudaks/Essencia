@@ -104,6 +104,29 @@ def test_document_helpers_preserve_existing_api_shapes():
     assert order["created_at"] == "2026-05-18T00:00:00+00:00"
 
 
+def test_product_page_response_reports_has_more_and_total():
+    server = _server_module()
+    products = [{"id": f"product-{i}"} for i in range(9)]
+
+    page = server._product_page_response(products, total=12, limit=9, offset=0)
+
+    assert page["items"] == products
+    assert page["total"] == 12
+    assert page["limit"] == 9
+    assert page["offset"] == 0
+    assert page["hasMore"] is True
+
+
+def test_product_page_response_reports_last_page():
+    server = _server_module()
+    products = [{"id": "product-10"}, {"id": "product-11"}]
+
+    page = server._product_page_response(products, total=11, limit=9, offset=9)
+
+    assert page["items"] == products
+    assert page["hasMore"] is False
+
+
 def test_realtime_manager_routes_events_to_admins_and_matching_order_clients():
     server = _server_module()
 

@@ -6,10 +6,9 @@ import { Instagram, Facebook, Twitter } from "lucide-react"
 const footerLinks = {
   shop: [
     { name: "All Products", href: "/shop" },
-    { name: "Serums", href: "/shop?category=serums" },
-    { name: "Moisturizers", href: "/shop?category=moisturizers" },
-    { name: "Cleansers", href: "/shop?category=cleansers" },
-    { name: "Gift Sets", href: "/shop" }
+    { name: "Perfumes", href: "/shop?category=perfumes" },
+    { name: "Makeup", href: "/shop?category=makeup" },
+    { name: "Skin Care", href: "/shop?category=skincare" },
   ],
   about: [
     { name: "Our Story", href: "/" },
@@ -44,17 +43,9 @@ export function Footer() {
               Natural skincare for those who believe beauty should feel as good as it looks.
             </p>
             <div className="flex gap-4">
+              
               <a
-                href="/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground blocks-transition blocks-shadow"
-                aria-label="Instagram"
-              >
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a
-                href="/"
+                href="https://www.facebook.com/essencia.edp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground blocks-transition blocks-shadow"
@@ -62,15 +53,7 @@ export function Footer() {
               >
                 <Facebook className="w-4 h-4" />
               </a>
-              <a
-                href="/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground blocks-transition blocks-shadow"
-                aria-label="Twitter"
-              >
-                <Twitter className="w-4 h-4" />
-              </a>
+              
             </div>
           </div>
 
@@ -92,7 +75,7 @@ export function Footer() {
           </div>
 
           {/* About Links */}
-          <div>
+          {/* <div>
             <h3 className="font-medium text-foreground mb-4">About</h3>
             <ul className="space-y-3">
               {footerLinks.about.map((link) => (
@@ -106,7 +89,7 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
           {/* Support Links */}
           <div>

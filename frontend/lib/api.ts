@@ -15,6 +15,21 @@ export type Product = {
   size: string
 }
 
+export type ProductPage = {
+  items: Product[]
+  total: number
+  limit: number
+  offset: number
+  hasMore: boolean
+}
+
+export type ProductListOptions = {
+  category?: string
+  gender?: string
+  limit?: number
+  offset?: number
+}
+
 export type Bank = {
   id: string
   name: string
@@ -93,6 +108,14 @@ export const api = {
     if (gender && gender !== "all") params.set("gender", gender)
     const query = params.toString()
     return http<Product[]>(`/api/products${query ? `?${query}` : ""}`)
+  },
+  listProductPage: ({ category, gender, limit = 9, offset = 0 }: ProductListOptions = {}) => {
+    const params = new URLSearchParams()
+    if (category && category !== "all") params.set("category", category)
+    if (gender && gender !== "all") params.set("gender", gender)
+    params.set("limit", String(limit))
+    params.set("offset", String(offset))
+    return http<ProductPage>(`/api/products?${params.toString()}`)
   },
   getProduct: (id: string) => http<Product>(`/api/products/${id}`),
   listBanks: () => http<Bank[]>(`/api/banks`),

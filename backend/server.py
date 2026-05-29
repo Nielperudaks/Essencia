@@ -11,7 +11,7 @@ import bcrypt
 import jwt
 import resend
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -438,14 +438,44 @@ async def get_me(admin=Depends(get_current_admin)):
 
 # Products ---
 @app.get("/api/products")
-async def list_products(category: Optional[str] = None, gender: Optional[str] = None):
+async def list_products(
+    category: Optional[str] = None,
+    gender: Optional[str] = None,
+    limit: Optional[int] = Query(default=None, ge=1, le=50),
+    offset: int = Query(default=0, ge=0),
+):
     query = {}
     if category and category.lower() != "all":
         query["category"] = category
     if gender and gender.lower() != "all":
         query["gender"] = gender
-    rows = await db.products.find(query).sort("created_at", -1).to_list(length=None)
-    return [_doc_to_product(r) for r in rows]
+    if limit is None:
+        rows = await db.products.find(query).sort("created_at", -1).to_list(length=None)
+        return [_doc_to_product(r) for r in rows]
+
+    total = await db.products.count_documents(query)
+    rows = await db.products.aggregate(
+        [
+            {"$match": query},
+            {
+                "$addFields": {
+                    "_display_in_stock": {"$cond": [{"$gt": ["$stock", 0]}, 1, 0]},
+                    "_display_bestseller": {
+                        "$cond": [
+                            {"$eq": [{"$toLower": {"$ifNull": ["$badge", ""]}}, "bestseller"]},
+                            1,
+                            0,
+                        ]
+                    },
+                }
+            },
+            {"$sort": {"_display_in_stock": -1, "_display_bestseller": -1, "created_at": -1}},
+            {"$skip": offset},
+            {"$limit": limit},
+            {"$project": {"_display_in_stock": 0, "_display_bestseller": 0}},
+        ]
+    ).to_list(length=limit)
+    return _product_page_response([_doc_to_product(r) for r in rows], total, limit, offset)
 
 
 @app.get("/api/products/{product_id}")
@@ -774,6 +804,16 @@ def _doc_to_product(r):
         "gender": r.get("gender", "All Genders"),
         "stock": r.get("stock", 0),
         "size": r.get("size", ""),
+    }
+
+
+def _product_page_response(items: list[dict], total: int, limit: int, offset: int):
+    return {
+        "items": items,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "hasMore": offset + len(items) < total,
     }
 
 

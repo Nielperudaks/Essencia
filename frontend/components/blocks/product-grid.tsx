@@ -17,8 +17,7 @@ const categories = [
 ]
 
 export function ProductGrid() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+  const [productsByCategory, setProductsByCategory] = useState<Partial<Record<Category, Product[]>>>({})
   const [selectedCategory, setSelectedCategory] = useState<Category>("Perfumes")
   const [isVisible, setIsVisible] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
@@ -28,13 +27,33 @@ export function ProductGrid() {
   const { addItem } = useCart()
 
   useEffect(() => {
-    api.listProducts()
-      .then((data) => setProducts(data))
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false))
-  }, [])
+    if (productsByCategory[selectedCategory]) return
 
-  const filteredProducts = products.filter(p => p.category === selectedCategory).slice(0, 4)
+    let cancelled = false
+
+    api.listProductPage({ category: selectedCategory, limit: 4, offset: 0 })
+      .then((page) => {
+        if (cancelled) return
+        setProductsByCategory((current) => ({
+          ...current,
+          [selectedCategory]: page.items,
+        }))
+      })
+      .catch(() => {
+        if (cancelled) return
+        setProductsByCategory((current) => ({
+          ...current,
+          [selectedCategory]: [],
+        }))
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [productsByCategory, selectedCategory])
+
+  const filteredProducts = productsByCategory[selectedCategory] ?? []
+  const loading = !productsByCategory[selectedCategory]
 
   const handleCategoryChange = (category: Category) => {
     if (category !== selectedCategory) {
@@ -128,6 +147,8 @@ export function ProductGrid() {
                     src={product.image || "/placeholder.svg"}
                     alt={product.name}
                     fill
+                    loading="lazy"
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                     className="object-cover blocks-transition group-hover:scale-105"
                   />
                   {product.badge && (

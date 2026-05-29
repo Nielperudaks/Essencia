@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { ShoppingBag, SlidersHorizontal, X } from "lucide-react"
@@ -10,30 +10,120 @@ import { api, type Product } from "@/lib/api"
 import { formatCurrency } from "@/lib/currency"
 import { useCart } from "@/components/blocks/cart-context"
 
+const PRODUCTS_PER_BATCH = 9
+const categoriesList = ["all", "Perfumes", "Makeup", "Skincare"]
+const genderList = ["all", "Male", "Female", "All Genders"]
+type ProductPageState = {
+  products: Product[]
+  totalProducts: number
+  hasMore: boolean
+  category: string
+  gender: string
+  loadingInitial: boolean
+}
+
 export default function ShopPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+  const [productPage, setProductPage] = useState<ProductPageState>({
+    products: [],
+    totalProducts: 0,
+    hasMore: false,
+    category: "all",
+    gender: "all",
+    loadingInitial: true,
+  })
+  const [loadingMore, setLoadingMore] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedGender, setSelectedGender] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
   const gridRef = useRef<HTMLDivElement>(null)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+  const requestIdRef = useRef(0)
 
   useEffect(() => {
-    api.listProducts()
-      .then(setProducts)
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false))
-  }, [])
+    const requestId = requestIdRef.current + 1
+    requestIdRef.current = requestId
 
-  const categoriesList = ["all", ...Array.from(new Set(products.map(p => p.category)))]
-  const genderList = ["all", "Male", "Female", "All Genders"]
+    api.listProductPage({
+      category: selectedCategory,
+      gender: selectedGender,
+      limit: PRODUCTS_PER_BATCH,
+      offset: 0,
+    })
+      .then((page) => {
+        if (requestIdRef.current !== requestId) return
+        setProductPage({
+          products: page.items,
+          totalProducts: page.total,
+          hasMore: page.hasMore,
+          category: selectedCategory,
+          gender: selectedGender,
+          loadingInitial: false,
+        })
+        setLoadingMore(false)
+      })
+      .catch(() => {
+        if (requestIdRef.current !== requestId) return
+        setProductPage({
+          products: [],
+          totalProducts: 0,
+          hasMore: false,
+          category: selectedCategory,
+          gender: selectedGender,
+          loadingInitial: false,
+        })
+        setLoadingMore(false)
+      })
+  }, [selectedCategory, selectedGender])
 
-  const filteredProducts = products.filter((p) => {
-    const categoryMatch = selectedCategory === "all" || p.category === selectedCategory
-    const genderMatch = selectedGender === "all" || p.gender === selectedGender
-    return categoryMatch && genderMatch
-  })
+  const filtersMatchPage = productPage.category === selectedCategory && productPage.gender === selectedGender
+  const products = useMemo(
+    () => (filtersMatchPage ? productPage.products : []),
+    [filtersMatchPage, productPage.products]
+  )
+  const totalProducts = filtersMatchPage ? productPage.totalProducts : 0
+  const hasMore = filtersMatchPage ? productPage.hasMore : false
+  const loadingInitial = productPage.loadingInitial || !filtersMatchPage
+
+  const loadMoreProducts = useCallback(() => {
+    if (loadingInitial || loadingMore || !hasMore) return
+
+    const requestId = requestIdRef.current
+    const offset = products.length
+    setLoadingMore(true)
+
+    api.listProductPage({
+      category: selectedCategory,
+      gender: selectedGender,
+      limit: PRODUCTS_PER_BATCH,
+      offset,
+      })
+      .then((page) => {
+        if (requestIdRef.current !== requestId) return
+        setProductPage((current) => {
+          const existingIds = new Set(current.products.map((product) => product.id))
+          const nextProducts = page.items.filter((product) => !existingIds.has(product.id))
+          return {
+            products: [...current.products, ...nextProducts],
+            totalProducts: page.total,
+            hasMore: page.hasMore,
+            category: selectedCategory,
+            gender: selectedGender,
+            loadingInitial: false,
+          }
+        })
+      })
+      .catch(() => {
+        if (requestIdRef.current !== requestId) return
+        setProductPage((current) => ({
+          ...current,
+          hasMore: false,
+        }))
+      })
+      .finally(() => {
+        if (requestIdRef.current === requestId) setLoadingMore(false)
+      })
+  }, [hasMore, loadingInitial, loadingMore, products.length, selectedCategory, selectedGender])
 
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
@@ -44,10 +134,24 @@ export default function ShopPage() {
   }, [products])
 
   useEffect(() => {
-    setIsVisible(false)
-    const timer = setTimeout(() => setIsVisible(true), 50)
-    return () => clearTimeout(timer)
+    const hideTimer = setTimeout(() => setIsVisible(false), 0)
+    const showTimer = setTimeout(() => setIsVisible(true), 50)
+    return () => {
+      clearTimeout(hideTimer)
+      clearTimeout(showTimer)
+    }
   }, [selectedCategory, selectedGender])
+
+  useEffect(() => {
+    if (!hasMore || loadingInitial || loadingMore) return
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) loadMoreProducts()
+    }, { rootMargin: "600px 0px" })
+
+    if (loadMoreRef.current) observer.observe(loadMoreRef.current)
+    return () => observer.disconnect()
+  }, [hasMore, loadMoreProducts, loadingInitial, loadingMore])
 
   return (
     <main className="min-h-screen" data-testid="shop-page">
@@ -114,7 +218,7 @@ export default function ShopPage() {
             </div>
 
             <span className="text-sm text-muted-foreground" data-testid="product-count">
-              {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"}
+              {totalProducts} {totalProducts === 1 ? "product" : "products"}
             </span>
           </div>
 
@@ -178,15 +282,15 @@ export default function ShopPage() {
           )}
 
           <div ref={gridRef} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {loading ? (
-              Array.from({ length: 6 }).map((_, i) => (
+            {loadingInitial ? (
+              Array.from({ length: PRODUCTS_PER_BATCH }).map((_, i) => (
                 <div key={i} className="aspect-[3/4] bg-muted rounded-3xl animate-pulse" />
               ))
-            ) : filteredProducts.length === 0 ? (
+            ) : products.length === 0 ? (
               <div className="col-span-full text-center py-20 text-muted-foreground">
                 No products found.
               </div>
-            ) : filteredProducts.map((product, index) => (
+            ) : products.map((product, index) => (
               <ProductCard
                 key={product.id}
                 product={product}
@@ -195,6 +299,28 @@ export default function ShopPage() {
               />
             ))}
           </div>
+
+          {!loadingInitial && products.length > 0 && (
+            <div ref={loadMoreRef} className="mt-12 flex justify-center">
+              {loadingMore ? (
+                <div className="grid grid-cols-3 gap-3" aria-label="Loading more products">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <span key={i} className="h-3 w-3 rounded-full bg-muted animate-pulse" />
+                  ))}
+                </div>
+              ) : hasMore ? (
+                <button
+                  type="button"
+                  onClick={loadMoreProducts}
+                  className="inline-flex items-center justify-center rounded-full border border-foreground/20 px-8 py-4 text-sm tracking-wide text-foreground blocks-transition hover:bg-foreground/5"
+                >
+                  Load more
+                </button>
+              ) : (
+                <span className="text-sm text-muted-foreground">All products loaded</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <Footer />
@@ -226,6 +352,8 @@ function ProductCard({ product, index, isVisible }: { product: Product; index: n
             src={product.image || "/placeholder.svg"}
             alt={product.name}
             fill
+            loading="lazy"
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             className={`object-cover blocks-transition group-hover:scale-105 transition-opacity duration-500 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
