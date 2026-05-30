@@ -1,3 +1,4 @@
+'use client';
 import { Header } from "@/components/blocks/header";
 import { Hero } from "@/components/blocks/hero";
 import { TrustBadges } from "@/components/blocks/trust-badges";
@@ -7,8 +8,11 @@ import { Testimonials } from "@/components/blocks/testimonials";
 import { CTABanner } from "@/components/blocks/cta-banner";
 import { Newsletter } from "@/components/blocks/newsletter";
 import { Footer } from "@/components/blocks/footer";
+import Crosshair from "@/components/Crosshair";
+import { useRef } from 'react';
 
 export default function HomePage() {
+  const containerRef = useRef<HTMLElement>(null!);
   return (
     <main>
       <Header />
@@ -65,8 +69,14 @@ export default function HomePage() {
           <ProductGrid />
         </div>
       </div>
+      <div className="relative">
+        {/* <Crosshair
+          
+          color="#ffffff"
+        /> */}
+        <FeatureSection />
+      </div>
 
-      <FeatureSection />
       <div className="relative">
         <div className=" w-full relative">
           {/* Dashed Grid */}

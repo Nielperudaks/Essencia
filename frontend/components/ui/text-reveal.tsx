@@ -31,7 +31,7 @@ const TextRevealByWord: FC<TextRevealByWordProps> = ({
         <p
           ref={targetRef}
           className={
-            "flex flex-wrap text-5xl font-extrabold text-black/20 dark:text-white/20 md:text-6xl lg:text-7xl xl:text-9xl"
+            "flex flex-wrap text-5xl font-extrabold text-black/20 dark:text-white/20 md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl"
           }
         >
           {words.map((word, i) => {

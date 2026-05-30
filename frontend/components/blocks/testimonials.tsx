@@ -52,11 +52,10 @@ export function Testimonials() {
           <div>
             <span className="storefront-kicker">Kind Words</span>
             {/* <h2 className="storefront-heading">Worn quietly. Remembered clearly.</h2> */}
-            <TextRevealByWord text="Worn quietly. Remembered clearly." />
+            <TextRevealByWord text="Don't just take our word for it—hear from the people who've experienced the difference." />
           </div>
-          <p className="storefront-copy">
-            Hear from our happy customers who trust us for their favorite
-            perfumes and beauty essentials. Their experiences reflect our
+          <p className="storefront-copy text-lg md:text-2xl">
+            Their experiences reflect our
             commitment to quality, authenticity, and exceptional customer
             service. Discover why beauty lovers keep coming back to us for
             products that make them feel confident and radiant.

@@ -149,7 +149,7 @@ export default function ProductPage() {
                 fill
                 priority
                 data-product-image
-                className="object-cover grayscale"
+                className="object-cover"
               />
               {isSoldOut && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-[1px]">

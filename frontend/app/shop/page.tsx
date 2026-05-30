@@ -174,11 +174,11 @@ export default function ShopPage() {
             <div>
               <span className="storefront-kicker">Collection</span>
               <h1 className="storefront-display">
-                Shop the edit.
+                Our Collections.
               </h1>
             </div>
             <p className="storefront-copy lg:justify-self-end">
-              Discover a precise selection of fragrance, makeup, and skincare essentials in a clean monochrome catalog.
+              Designed for those who appreciate elegance, sophistication, and attention to detail. Elevate your lifestyle with every purchase.
             </p>
           </div>
 
