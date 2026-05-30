@@ -1,6 +1,6 @@
 "use client"
 
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react"
+import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -12,93 +12,84 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer"
-import { useCart } from "./cart-context"
 import { formatCurrency } from "@/lib/currency"
+import { useCart } from "./cart-context"
 
 export function CartDrawer() {
   const { items, removeItem, updateQuantity, isOpen, setIsOpen, itemCount, subtotal } = useCart()
 
-  const shipping = 0
-  const total = subtotal + shipping
-
   return (
     <Drawer open={isOpen} onOpenChange={setIsOpen} direction="right">
-      <DrawerContent className="h-full w-full sm:max-w-[440px]">
-        <DrawerHeader className="border-b border-border/50 p-6 py-2.5">
-          <DrawerTitle className="font-serif text-2xl">Cart</DrawerTitle>
-          <DrawerDescription>{itemCount} {itemCount === 1 ? 'item' : 'items'}</DrawerDescription>
+      <DrawerContent className="h-full w-full border-l border-border bg-background sm:max-w-[460px]">
+        <DrawerHeader className="border-b border-border p-6">
+          <DrawerTitle className="font-serif text-4xl font-semibold">Cart</DrawerTitle>
+          <DrawerDescription className="text-sm text-muted-foreground">
+            {itemCount} {itemCount === 1 ? "item" : "items"} in your edit
+          </DrawerDescription>
         </DrawerHeader>
 
-        {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-6">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <ShoppingBag className="w-12 h-12 text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">Your cart is empty</p>
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <div className="mb-5 flex size-16 items-center justify-center border border-border">
+                <ShoppingBag className="size-6 text-muted-foreground" />
+              </div>
+              <p className="font-serif text-2xl font-semibold text-foreground">Your cart is empty</p>
+              <p className="mt-2 max-w-56 text-sm leading-6 text-muted-foreground">Start with a precise essential from the collection.</p>
               <DrawerClose asChild>
-                <button
-                  type="button"
-                  className="mt-4 text-primary hover:underline text-sm"
-                >
-                  Continue Shopping
-                </button>
+                <Link href="/shop" className="storefront-button mt-6">
+                  Continue shopping
+                </Link>
               </DrawerClose>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-px border border-border bg-border">
               {items.map((item) => (
-                <div key={item.id} className="flex gap-4">
-                  {/* Product Image */}
-                  <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-                    <Image
-                      src={item.image || "/placeholder.svg"}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
+                <div key={item.id} className="grid grid-cols-[88px_1fr] gap-4 bg-background p-4">
+                  <div className="relative aspect-square overflow-hidden bg-muted">
+                    <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover grayscale" />
                   </div>
 
-                  {/* Product Details */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-serif text-base text-foreground mb-1 font-semibold">{item.name}</h3>
-                    <p className="text-muted-foreground mb-3 text-sm">{item.description}</p>
-                    
-                    {/* Quantity Controls */}
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center border border-border rounded-full">
+                  <div className="min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-serif text-xl font-semibold leading-tight text-foreground">{item.name}</h3>
+                        {item.size && <p className="mt-1 text-xs text-muted-foreground">Size: {item.size}</p>}
+                      </div>
+                      <p className="whitespace-nowrap text-sm font-medium text-foreground">{formatCurrency(item.price * item.quantity)}</p>
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">{item.description}</p>
+
+                    <div className="mt-4 flex items-center gap-2">
+                      <div className="inline-flex border border-border">
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="p-1.5 hover:bg-muted blocks-transition rounded-l-full"
+                          className="flex size-9 items-center justify-center hover:bg-muted"
                           aria-label="Decrease quantity"
                         >
-                          <Minus className="w-3 h-3" />
+                          <Minus className="size-3" />
                         </button>
-                        <span className="px-3 text-sm font-medium">{item.quantity}</span>
+                        <span className="flex h-9 min-w-9 items-center justify-center border-x border-border text-sm font-medium">{item.quantity}</span>
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="p-1.5 hover:bg-muted blocks-transition rounded-r-full"
+                          className="flex size-9 items-center justify-center hover:bg-muted"
                           aria-label="Increase quantity"
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="size-3" />
                         </button>
                       </div>
 
                       <button
                         type="button"
                         onClick={() => removeItem(item.id)}
-                        className="p-1.5 text-muted-foreground hover:text-destructive blocks-transition"
+                        className="storefront-icon-button size-9"
                         aria-label="Remove item"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="size-4" />
                       </button>
                     </div>
-                  </div>
-
-                  {/* Price */}
-                  <div className="text-right">
-                    <p className="font-medium text-foreground">{formatCurrency(item.price * item.quantity)}</p>
                   </div>
                 </div>
               ))}
@@ -107,39 +98,34 @@ export function CartDrawer() {
         </div>
 
         {items.length > 0 && (
-          <DrawerFooter className="border-t border-border/50 p-6 gap-4">
-            {/* Summary */}
-            <div className="space-y-2 text-sm">
+          <DrawerFooter className="border-t border-border p-6">
+            <div className="space-y-3 text-sm">
               <div className="flex justify-between text-muted-foreground">
                 <span>Subtotal</span>
                 <span>{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Shipping</span>
-                <span>{shipping === 0 ? 'Free' : formatCurrency(shipping)}</span>
+                <span>COD / COP</span>
               </div>
-              <div className="flex justify-between text-base font-medium text-foreground pt-2 border-t border-border/50">
+              <div className="flex justify-between border-t border-border pt-4 text-base font-semibold text-foreground">
                 <span>Total</span>
-                <span>{formatCurrency(total)}</span>
+                <span>{formatCurrency(subtotal)}</span>
               </div>
             </div>
 
-            {/* Checkout Button */}
             <Link
               href="/payment"
               onClick={() => setIsOpen(false)}
               data-testid="checkout-btn"
-              className="w-full inline-flex items-center justify-center bg-primary text-primary-foreground py-4 rounded-full font-medium hover:bg-primary/90 blocks-transition"
+              className="storefront-button mt-2 w-full"
             >
               Checkout
             </Link>
 
             <DrawerClose asChild>
-              <button
-                type="button"
-                className="w-full border border-border text-foreground py-4 rounded-full font-medium hover:bg-muted blocks-transition"
-              >
-                Continue Shopping
+              <button type="button" className="storefront-button-outline w-full">
+                Continue shopping
               </button>
             </DrawerClose>
           </DrawerFooter>

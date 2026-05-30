@@ -126,25 +126,30 @@ export default function PaymentPage() {
   }
 
   return (
-    <main className="min-h-screen" data-testid="payment-page">
+    <main className="min-h-screen bg-background" data-testid="payment-page">
       <Header />
-      <div className="pt-28 pb-24">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+      <div className="pt-32 pb-24">
+        <div className="mx-auto w-full max-w-6xl px-5 sm:px-6 lg:px-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground blocks-transition mb-8"
+            className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <ChevronLeft className="w-4 h-4" />
-            Continue Shopping
+            Continue shopping
           </Link>
 
-          <div className="text-center mb-12">
-            <span className="text-sm tracking-[0.3em] uppercase text-primary mb-3 block">Checkout</span>
-            <h1 className="font-serif text-4xl md:text-5xl text-foreground">Complete Your Order</h1>
+          <div className="mb-12 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
+            <div>
+              <span className="storefront-kicker">Checkout</span>
+              <h1 className="storefront-heading">Complete your order.</h1>
+            </div>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Confirm your details, choose a bank, upload proof, and we will handle confirmation from there.
+            </p>
           </div>
 
           {success && (
-            <div className="mb-6 p-5 rounded-2xl bg-green-100 border border-green-300 text-green-800 flex items-center gap-3" data-testid="payment-success">
+            <div className="mb-6 flex items-center gap-3 border border-foreground bg-background p-5 text-foreground" data-testid="payment-success">
               <Check className="w-5 h-5" />
               <div>
                 <p className="font-medium">Payment submitted!</p>
@@ -154,7 +159,7 @@ export default function PaymentPage() {
           )}
 
           {error && (
-            <div className="mb-6 p-4 rounded-2xl bg-destructive/10 text-destructive text-sm" data-testid="payment-error">
+            <div className="mb-6 border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive" data-testid="payment-error">
               {error}
             </div>
           )}
@@ -163,28 +168,28 @@ export default function PaymentPage() {
             {/* LEFT: cart + customer info + banks */}
             <div className="space-y-8">
               {/* Cart items */}
-              <section className="bg-card rounded-3xl p-6 blocks-shadow" data-testid="payment-cart">
-                <h2 className="font-serif text-2xl mb-4">Your Items ({items.length})</h2>
+              <section className="storefront-card p-6" data-testid="payment-cart">
+                <h2 className="mb-4 font-serif text-3xl font-semibold">Your items ({items.length})</h2>
                 {items.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <p className="mb-3">Your cart is empty.</p>
-                    <Link href="/shop" className="text-primary underline">Browse products</Link>
+                    <Link href="/shop" className="font-medium text-foreground underline">Browse products</Link>
                   </div>
                 ) : (
                   <div className="space-y-5">
                     {items.map((item) => (
                       <div key={item.id} className="flex gap-4 items-center" data-testid={`cart-item-${item.id}`}>
-                        <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-muted flex-shrink-0">
-                          <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover" />
+                        <div className="relative w-20 h-20 overflow-hidden bg-muted flex-shrink-0">
+                          <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover grayscale" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-serif text-base truncate">{item.name}</h3>
                           {item.size && <p className="text-xs text-muted-foreground">Size: {item.size}</p>}
                           <div className="flex items-center gap-3 mt-2">
-                            <div className="flex items-center border border-border rounded-full">
-                              <button type="button" onClick={() => updateQuantity(item.id, item.quantity - 1)} className="p-1.5 hover:bg-muted rounded-l-full"><Minus className="w-3 h-3" /></button>
+                            <div className="flex items-center border border-border">
+                              <button type="button" onClick={() => updateQuantity(item.id, item.quantity - 1)} className="p-1.5 hover:bg-muted"><Minus className="w-3 h-3" /></button>
                               <span className="px-3 text-sm">{item.quantity}</span>
-                              <button type="button" onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-1.5 hover:bg-muted rounded-r-full"><Plus className="w-3 h-3" /></button>
+                              <button type="button" onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-1.5 hover:bg-muted"><Plus className="w-3 h-3" /></button>
                             </div>
                             <button type="button" onClick={() => removeItem(item.id)} className="text-muted-foreground hover:text-destructive">
                               <Trash2 className="w-4 h-4" />
@@ -199,18 +204,18 @@ export default function PaymentPage() {
               </section>
 
               {/* Customer info */}
-              <section className="bg-card rounded-3xl p-6 blocks-shadow">
-                <h2 className="font-serif text-2xl mb-4">Customer Information</h2>
+              <section className="storefront-card p-6">
+                <h2 className="mb-4 font-serif text-3xl font-semibold">Customer information</h2>
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <input type="text" placeholder="Full name *" value={name} onChange={(e) => setName(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-customer-name" />
-                  <input type="email" placeholder="Email *" value={email} onChange={(e) => setEmail(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-customer-email" />
-                  <input type="text" placeholder="Phone *" value={phone} onChange={(e) => setPhone(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-customer-phone" />
-                  <input type="text" placeholder="Facebook account *" value={facebookAccount} onChange={(e) => setFacebookAccount(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-facebook-account" />
-                  <input type="text" placeholder="Province *" value={province} onChange={(e) => setProvince(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-province" />
-                  <input type="text" placeholder="Town/City *" value={townCity} onChange={(e) => setTownCity(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-town-city" />
-                  <input type="text" placeholder="Barangay *" value={barangay} onChange={(e) => setBarangay(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-barangay" />
-                  <input type="text" placeholder="Street/house no. *" value={streetHouseNo} onChange={(e) => setStreetHouseNo(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-street-house-no" />
-                  <input type="text" placeholder="Zipcode *" value={zipcode} onChange={(e) => setZipcode(e.target.value)} className="px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary" data-testid="input-zipcode" />
+                  <input type="text" placeholder="Full name *" value={name} onChange={(e) => setName(e.target.value)} className="storefront-input" data-testid="input-customer-name" />
+                  <input type="email" placeholder="Email *" value={email} onChange={(e) => setEmail(e.target.value)} className="storefront-input" data-testid="input-customer-email" />
+                  <input type="text" placeholder="Phone *" value={phone} onChange={(e) => setPhone(e.target.value)} className="storefront-input" data-testid="input-customer-phone" />
+                  <input type="text" placeholder="Facebook account *" value={facebookAccount} onChange={(e) => setFacebookAccount(e.target.value)} className="storefront-input" data-testid="input-facebook-account" />
+                  <input type="text" placeholder="Province *" value={province} onChange={(e) => setProvince(e.target.value)} className="storefront-input" data-testid="input-province" />
+                  <input type="text" placeholder="Town/City *" value={townCity} onChange={(e) => setTownCity(e.target.value)} className="storefront-input" data-testid="input-town-city" />
+                  <input type="text" placeholder="Barangay *" value={barangay} onChange={(e) => setBarangay(e.target.value)} className="storefront-input" data-testid="input-barangay" />
+                  <input type="text" placeholder="Street/house no. *" value={streetHouseNo} onChange={(e) => setStreetHouseNo(e.target.value)} className="storefront-input" data-testid="input-street-house-no" />
+                  <input type="text" placeholder="Zipcode *" value={zipcode} onChange={(e) => setZipcode(e.target.value)} className="storefront-input" data-testid="input-zipcode" />
                   <div className="sm:col-span-2">
                     <label htmlFor="shipping-mode" className="text-sm font-medium text-foreground mb-2 block">
                       Shipping Mode *
@@ -219,7 +224,7 @@ export default function PaymentPage() {
                       id="shipping-mode"
                       value={shippingMode}
                       onChange={(e) => setShippingMode(e.target.value as ShippingMode)}
-                      className="w-full px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary"
+                      className="storefront-input"
                       data-testid="select-shipping-mode"
                     >
                       {SHIPPING_MODES.map((mode) => (
@@ -236,18 +241,18 @@ export default function PaymentPage() {
               </section>
 
               {/* Banks accordion */}
-              <section className="bg-card rounded-3xl p-6 blocks-shadow" data-testid="banks-section">
-                <h2 className="font-serif text-2xl mb-4">Choose Payment Method</h2>
+              <section className="storefront-card p-6" data-testid="banks-section">
+                <h2 className="mb-4 font-serif text-3xl font-semibold">Choose payment method</h2>
                 <p className="text-sm text-muted-foreground mb-6">
                   Scan the bank&apos;s QR code, complete your payment, then upload your proof of payment.
                 </p>
 
                 {loadingBanks ? (
                   <div className="space-y-3">
-                    {Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-14 bg-muted rounded-2xl animate-pulse" />)}
+                    {Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-14 bg-muted animate-pulse" />)}
                   </div>
                 ) : banks.length === 0 ? (
-                  <div className="text-center py-10 text-muted-foreground bg-background rounded-2xl">
+                  <div className="bg-background py-10 text-center text-muted-foreground">
                     No banks configured yet. Please ask the store admin to add bank payment options.
                   </div>
                 ) : (
@@ -256,12 +261,12 @@ export default function PaymentPage() {
                       const isOpen = openBankId === bank.id
                       const proof = proofByBank[bank.id]
                       return (
-                        <div key={bank.id} className="border border-border rounded-2xl overflow-hidden bg-background" data-testid={`bank-item-${bank.id}`}>
+                        <div key={bank.id} className="overflow-hidden border border-border bg-background" data-testid={`bank-item-${bank.id}`}>
                           <button
                             type="button"
                             onClick={() => setOpenBankId(isOpen ? null : bank.id)}
                             data-testid={`bank-toggle-${bank.id}`}
-                            className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-muted/30 blocks-transition"
+                            className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-muted transition-colors"
                           >
                             <div>
                               <div className="font-medium text-foreground">{bank.name}</div>
@@ -283,7 +288,7 @@ export default function PaymentPage() {
                                   </label>
                                   <label
                                     htmlFor={`proof-${bank.id}`}
-                                    className="cursor-pointer inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-full bg-card border border-dashed border-border hover:border-primary text-sm blocks-transition"
+                            className="cursor-pointer inline-flex w-full items-center justify-center gap-2 border border-dashed border-border bg-card px-4 py-3 text-sm transition-colors hover:border-foreground"
                                     data-testid={`proof-upload-label-${bank.id}`}
                                   >
                                     <Upload className="w-4 h-4" />
@@ -309,7 +314,7 @@ export default function PaymentPage() {
                                   onClick={() => handleSubmit(bank.id, bank.name)}
                                   disabled={submitting || items.length === 0}
                                   data-testid={`submit-payment-${bank.id}`}
-                                  className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3.5 rounded-full font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed blocks-transition"
+                                  className="storefront-button w-full"
                                 >
                                   {submitting ? "Submitting..." : "Submit Payment Proof"}
                                 </button>
@@ -318,7 +323,7 @@ export default function PaymentPage() {
                               {/* RIGHT inside accordion: QR */}
                               <div className="order-1 md:order-2 flex flex-col items-center">
                                 <div className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">QR Code</div>
-                                <div className="relative w-56 h-56 rounded-2xl overflow-hidden bg-white border border-border flex items-center justify-center">
+                                <div className="relative flex h-56 w-56 items-center justify-center overflow-hidden border border-border bg-white">
                                   {bank.qr_image ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img src={bank.qr_image} alt={`${bank.name} QR`} className="w-full h-full object-contain" />
@@ -338,8 +343,8 @@ export default function PaymentPage() {
             </div>
 
             {/* RIGHT: order summary */}
-            <aside className="bg-card rounded-3xl p-6 blocks-shadow h-fit sticky top-28" data-testid="order-summary">
-              <h2 className="font-serif text-2xl mb-5">Order Summary</h2>
+            <aside className="storefront-card sticky top-28 h-fit p-6" data-testid="order-summary">
+              <h2 className="mb-5 font-serif text-3xl font-semibold">Order summary</h2>
               <div className="space-y-2 text-sm mb-5">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal ({items.length} items)</span>

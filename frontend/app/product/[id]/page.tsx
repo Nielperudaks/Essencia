@@ -1,26 +1,28 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { ChevronLeft, Minus, Plus, Leaf, Heart, Award, Recycle, Star, Check } from "lucide-react"
+import { Award, Check, ChevronLeft, Heart, Leaf, Minus, Plus, Recycle, Star } from "lucide-react"
 import { Header } from "@/components/blocks/header"
 import { Footer } from "@/components/blocks/footer"
 import { api, type Product } from "@/lib/api"
 import { formatCurrency } from "@/lib/currency"
 import { useCart } from "@/components/blocks/cart-context"
+import { useStorefrontGsap } from "@/hooks/use-storefront-gsap"
 
 const benefits = [
   { icon: Leaf, label: "Authentic" },
-  { icon: Heart, label: "Long Lasting" },
-  { icon: Recycle, label: "Premium Pack" },
-  { icon: Award, label: "Top Rated" },
+  { icon: Heart, label: "Long lasting" },
+  { icon: Recycle, label: "Premium pack" },
+  { icon: Award, label: "Top rated" },
 ]
 
 export default function ProductPage() {
   const params = useParams()
   const productId = params.id as string
+  const pageRef = useRef<HTMLElement>(null)
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -28,13 +30,51 @@ export default function ProductPage() {
   const [isAdded, setIsAdded] = useState(false)
   const { addItem, setIsOpen } = useCart()
 
+  useStorefrontGsap(pageRef, ({ gsap }) => {
+    gsap.from("[data-product-reveal]", {
+      y: 34,
+      opacity: 0,
+      duration: 0.8,
+      stagger: 0.08,
+      ease: "power3.out",
+    })
+
+    gsap.to("[data-product-image]", {
+      yPercent: -6,
+      ease: "none",
+      scrollTrigger: {
+        trigger: pageRef.current,
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+      },
+    })
+  }, [product?.id])
+
   useEffect(() => {
-    setLoading(true)
+    let cancelled = false
+
     api.getProduct(productId)
-      .then((p) => setProduct(p))
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false))
+      .then((nextProduct) => {
+        if (cancelled) return
+        setProduct(nextProduct)
+        setNotFound(false)
+        setQuantity(1)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setProduct(null)
+        setNotFound(true)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
     window.scrollTo(0, 0)
+
+    return () => {
+      cancelled = true
+    }
   }, [productId])
 
   const handleAddToCart = () => {
@@ -55,15 +95,15 @@ export default function ProductPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen">
+      <main className="min-h-screen bg-background">
         <Header />
-        <div className="pt-28 pb-20 max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12">
-            <div className="aspect-square bg-muted rounded-3xl animate-pulse" />
+        <div className="storefront-shell pt-32 pb-20">
+          <div className="grid gap-10 lg:grid-cols-2">
+            <div className="aspect-square animate-pulse bg-muted" />
             <div className="space-y-4">
-              <div className="h-10 bg-muted rounded animate-pulse" />
-              <div className="h-6 bg-muted rounded animate-pulse w-1/2" />
-              <div className="h-24 bg-muted rounded animate-pulse" />
+              <div className="h-16 animate-pulse bg-muted" />
+              <div className="h-6 w-1/2 animate-pulse bg-muted" />
+              <div className="h-32 animate-pulse bg-muted" />
             </div>
           </div>
         </div>
@@ -74,132 +114,120 @@ export default function ProductPage() {
 
   if (notFound || !product) {
     return (
-      <main className="min-h-screen">
+      <main className="min-h-screen bg-background">
         <Header />
-        <div className="pt-40 pb-32 text-center">
-          <h1 className="font-serif text-4xl mb-4">Product not found</h1>
-          <Link href="/shop" className="text-primary underline">Back to shop</Link>
+        <div className="storefront-shell py-40 text-center">
+          <h1 className="mb-5 font-serif text-5xl font-semibold">Product not found</h1>
+          <Link href="/shop" className="storefront-button">Back to shop</Link>
         </div>
         <Footer />
       </main>
     )
   }
 
+  const isSoldOut = product.stock <= 0
+
   return (
-    <main className="min-h-screen" data-testid="product-detail-page">
+    <main ref={pageRef} className="min-h-screen bg-background" data-testid="product-detail-page">
       <Header />
-      <div className="pt-28 pb-20">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <div className="pt-32 pb-20">
+        <div className="storefront-shell">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground blocks-transition mb-8"
+            data-product-reveal
+            className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Shop
+            <ChevronLeft className="size-4" />
+            Back to shop
           </Link>
 
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
-            <div className="relative aspect-square rounded-3xl overflow-hidden bg-card blocks-shadow">
+          <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+            <div data-product-reveal className="storefront-media aspect-[4/5] lg:sticky lg:top-28">
               <Image
                 src={product.image || "/placeholder.svg"}
                 alt={product.name}
                 fill
-                className="object-cover"
                 priority
+                data-product-image
+                className="object-cover grayscale"
               />
-              {product.stock <= 0 && (
-                <div className="absolute inset-0 bg-background/75 backdrop-blur-[1px] flex items-center justify-center">
-                  <span className="bg-foreground text-background px-5 py-2.5 rounded-full text-sm font-semibold tracking-[0.2em]">
-                    SOLD OUT
+              {isSoldOut && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-[1px]">
+                  <span className="bg-foreground px-5 py-3 text-xs font-semibold uppercase text-background" style={{ letterSpacing: "0.18em" }}>
+                    Sold out
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="flex flex-col">
-              <div className="mb-8">
-                <span className="text-sm tracking-[0.3em] uppercase text-primary mb-2 block">
-                  {product.category}
-                </span>
-                <span className="text-xs tracking-[0.25em] uppercase text-muted-foreground mb-3 block">
+            <div className="lg:pt-10">
+              <div data-product-reveal className="border-b border-border pb-8">
+                <span className="storefront-kicker">{product.category}</span>
+                <span className="mb-3 block text-xs font-medium uppercase text-muted-foreground" style={{ letterSpacing: "0.16em" }}>
                   {product.gender}
                 </span>
-                <h1 className="font-serif text-4xl md:text-5xl text-foreground mb-3" data-testid="product-name">
+                <h1 className="mb-5 font-serif text-5xl font-semibold leading-none text-foreground sm:text-6xl lg:text-7xl" data-testid="product-name">
                   {product.name}
                 </h1>
-                <div className="flex items-center gap-2 mb-4">
+                <div className="mb-6 flex items-center gap-3">
                   <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Star key={index} className="size-4 fill-foreground text-foreground" />
                     ))}
                   </div>
                   <span className="text-sm text-muted-foreground">(128 reviews)</span>
                 </div>
-                <p className="text-foreground/80 leading-relaxed">
-                  {product.description}
-                </p>
+                <p className="max-w-xl text-base leading-7 text-muted-foreground">{product.description}</p>
               </div>
 
-              <div className="flex items-center gap-3 mb-6">
-                <span className="text-3xl font-medium text-foreground" data-testid="product-price">{formatCurrency(product.price)}</span>
-                {product.originalPrice && (
-                  <span className="text-xl text-muted-foreground line-through">
-                    {formatCurrency(product.originalPrice)}
-                  </span>
-                )}
-              </div>
+              <div data-product-reveal className="border-b border-border py-7">
+                <div className="mb-6 flex items-baseline gap-3">
+                  <span className="text-4xl font-semibold text-foreground" data-testid="product-price">{formatCurrency(product.price)}</span>
+                  {product.originalPrice && (
+                    <span className="text-xl text-muted-foreground line-through">{formatCurrency(product.originalPrice)}</span>
+                  )}
+                </div>
 
-              <div className="mb-6 flex gap-6 text-sm">
-                {product.size && (
-                  <div>
-                    <span className="text-muted-foreground">Size: </span>
-                    <span className="font-medium text-foreground">{product.size}</span>
-                  </div>
-                )}
-                <div>
-                  <span className="text-muted-foreground">Stock: </span>
-                  <span className={`font-medium ${product.stock > 0 ? 'text-foreground' : 'text-destructive'}`} data-testid="product-stock">
-                    {product.stock > 0 ? `${product.stock} available` : 'Out of stock'}
-                  </span>
+                <div className="grid gap-3 text-sm sm:grid-cols-2">
+                  {product.size && (
+                    <InfoLine label="Size" value={product.size} />
+                  )}
+                  <InfoLine label="Stock" value={product.stock > 0 ? `${product.stock} available` : "Out of stock"} testId="product-stock" danger={isSoldOut} />
                 </div>
               </div>
 
-              <div className="mb-8">
-                <label className="text-sm font-medium text-foreground mb-3 block">Quantity</label>
-                <div className="inline-flex items-center gap-4 bg-card rounded-full px-2 py-2 blocks-shadow">
+              <div data-product-reveal className="border-b border-border py-7">
+                <label className="mb-3 block text-sm font-medium text-foreground">Quantity</label>
+                <div className="inline-flex border border-border">
                   <button
                     type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground blocks-transition"
+                    className="flex size-12 items-center justify-center hover:bg-muted"
                     aria-label="Decrease quantity"
                   >
-                    <Minus className="w-4 h-4" />
+                    <Minus className="size-4" />
                   </button>
-                  <span className="w-8 text-center font-medium text-foreground">{quantity}</span>
+                  <span className="flex h-12 min-w-14 items-center justify-center border-x border-border font-medium">{quantity}</span>
                   <button
                     type="button"
                     onClick={() => setQuantity(Math.min(product.stock || quantity + 1, quantity + 1))}
-                    className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground blocks-transition"
+                    className="flex size-12 items-center justify-center hover:bg-muted"
                     aria-label="Increase quantity"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="size-4" />
                   </button>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 mb-10">
+              <div data-product-reveal className="grid gap-3 py-7 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  disabled={product.stock <= 0}
+                  disabled={isSoldOut}
                   data-testid="add-to-cart-btn"
-                  className={`flex-1 inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full text-sm tracking-wide blocks-transition blocks-shadow disabled:opacity-50 disabled:cursor-not-allowed ${
-                    isAdded
-                      ? "bg-primary/80 text-primary-foreground"
-                      : "bg-primary text-primary-foreground hover:bg-primary/90"
-                  }`}
+                  className="storefront-button"
                 >
-                  {isAdded ? (<><Check className="w-4 h-4" /> Added to Cart</>) : "Add to Cart"}
+                  {isAdded ? (<><Check className="size-4" /> Added to cart</>) : "Add to cart"}
                 </button>
                 {product.stock > 0 ? (
                   <Link
@@ -216,30 +244,22 @@ export default function ProductPage() {
                       setIsOpen(false)
                     }}
                     data-testid="buy-now-btn"
-                    className="flex-1 inline-flex items-center justify-center gap-2 bg-transparent border border-foreground/20 text-foreground px-8 py-4 rounded-full text-sm tracking-wide blocks-transition hover:bg-foreground/5"
+                    className="storefront-button-outline"
                   >
-                    Buy Now
+                    Buy now
                   </Link>
                 ) : (
-                  <button
-                    type="button"
-                    disabled
-                    data-testid="buy-now-btn"
-                    className="flex-1 inline-flex items-center justify-center gap-2 bg-transparent border border-foreground/20 text-foreground px-8 py-4 rounded-full text-sm tracking-wide opacity-50 cursor-not-allowed"
-                  >
-                    Sold Out
+                  <button type="button" disabled data-testid="buy-now-btn" className="storefront-button-outline">
+                    Sold out
                   </button>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div data-product-reveal className="grid grid-cols-2 gap-px overflow-hidden border border-border bg-border sm:grid-cols-4">
                 {benefits.map((benefit) => (
-                  <div
-                    key={benefit.label}
-                    className="flex flex-col items-center gap-2 p-4 rounded-md"
-                  >
-                    <benefit.icon className="w-5 h-5 text-primary" />
-                    <span className="text-xs text-muted-foreground text-center">{benefit.label}</span>
+                  <div key={benefit.label} className="bg-background p-4 text-center">
+                    <benefit.icon className="mx-auto mb-3 size-5 text-foreground" strokeWidth={1.5} />
+                    <span className="text-xs font-medium text-muted-foreground">{benefit.label}</span>
                   </div>
                 ))}
               </div>
@@ -249,5 +269,14 @@ export default function ProductPage() {
       </div>
       <Footer />
     </main>
+  )
+}
+
+function InfoLine({ label, value, testId, danger }: { label: string; value: string; testId?: string; danger?: boolean }) {
+  return (
+    <div className="border border-border p-4">
+      <span className="mb-1 block text-xs uppercase text-muted-foreground" style={{ letterSpacing: "0.16em" }}>{label}</span>
+      <span className={danger ? "font-medium text-destructive" : "font-medium text-foreground"} data-testid={testId}>{value}</span>
+    </div>
   )
 }

@@ -1,173 +1,191 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { ShoppingBag } from "lucide-react"
-import { useCart } from "./cart-context"
-import { api, type Product } from "@/lib/api"
-import { formatCurrency } from "@/lib/currency"
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, ShoppingBag } from "lucide-react";
+import { useStorefrontGsap } from "@/hooks/use-storefront-gsap";
+import { api, type Product } from "@/lib/api";
+import { formatCurrency } from "@/lib/currency";
+import { useCart } from "./cart-context";
 
-type Category = "Perfumes" | "Makeup" | "Skincare"
+type Category = "Perfumes" | "Makeup" | "Skincare";
 
 const categories = [
-  { value: "Perfumes" as Category, label: "Perfumes" },
+  { value: "Perfumes" as Category, label: "Perfume" },
   { value: "Makeup" as Category, label: "Makeup" },
-  { value: "Skincare" as Category, label: "Skincare" },
-]
+  { value: "Skincare" as Category, label: "Skin" },
+];
 
 export function ProductGrid() {
-  const [productsByCategory, setProductsByCategory] = useState<Partial<Record<Category, Product[]>>>({})
-  const [selectedCategory, setSelectedCategory] = useState<Category>("Perfumes")
-  const [isVisible, setIsVisible] = useState(false)
-  const [isTransitioning, setIsTransitioning] = useState(false)
-  const [headerVisible, setHeaderVisible] = useState(false)
-  const gridRef = useRef<HTMLDivElement>(null)
-  const headerRef = useRef<HTMLDivElement>(null)
-  const { addItem } = useCart()
+  const [productsByCategory, setProductsByCategory] = useState<
+    Partial<Record<Category, Product[]>>
+  >({});
+  const [selectedCategory, setSelectedCategory] =
+    useState<Category>("Perfumes");
+  const sectionRef = useRef<HTMLElement>(null);
+  const { addItem } = useCart();
+
+  useStorefrontGsap(sectionRef, ({ gsap }) => {
+    gsap.from("[data-product-heading]", {
+      y: 34,
+      opacity: 0,
+      duration: 0.8,
+      ease: "power3.out",
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top 72%",
+      },
+    });
+  });
+
+  useStorefrontGsap(
+    sectionRef,
+    ({ gsap }) => {
+      gsap.from("[data-featured-product]", {
+        y: 42,
+        opacity: 0,
+        duration: 0.75,
+        stagger: 0.08,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: "[data-testid='products-grid']",
+          start: "top 82%",
+        },
+      });
+    },
+    [selectedCategory, productsByCategory[selectedCategory]?.length ?? 0],
+  );
 
   useEffect(() => {
-    if (productsByCategory[selectedCategory]) return
+    if (productsByCategory[selectedCategory]) return;
 
-    let cancelled = false
+    let cancelled = false;
 
-    api.listProductPage({ category: selectedCategory, limit: 4, offset: 0 })
+    api
+      .listProductPage({ category: selectedCategory, limit: 4, offset: 0 })
       .then((page) => {
-        if (cancelled) return
+        if (cancelled) return;
         setProductsByCategory((current) => ({
           ...current,
           [selectedCategory]: page.items,
-        }))
+        }));
       })
       .catch(() => {
-        if (cancelled) return
+        if (cancelled) return;
         setProductsByCategory((current) => ({
           ...current,
           [selectedCategory]: [],
-        }))
-      })
+        }));
+      });
 
     return () => {
-      cancelled = true
-    }
-  }, [productsByCategory, selectedCategory])
+      cancelled = true;
+    };
+  }, [productsByCategory, selectedCategory]);
 
-  const filteredProducts = productsByCategory[selectedCategory] ?? []
-  const loading = !productsByCategory[selectedCategory]
-
-  const handleCategoryChange = (category: Category) => {
-    if (category !== selectedCategory) {
-      setIsTransitioning(true)
-      setTimeout(() => {
-        setSelectedCategory(category)
-        setTimeout(() => setIsTransitioning(false), 50)
-      }, 300)
-    }
-  }
-
-  useEffect(() => {
-    const gridObserver = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) setIsVisible(true)
-    }, { threshold: 0.1 })
-    const headerObserver = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) setHeaderVisible(true)
-    }, { threshold: 0.1 })
-    if (gridRef.current) gridObserver.observe(gridRef.current)
-    if (headerRef.current) headerObserver.observe(headerRef.current)
-    return () => {
-      gridObserver.disconnect()
-      headerObserver.disconnect()
-    }
-  }, [])
+  const filteredProducts = productsByCategory[selectedCategory] ?? [];
+  const loading = !productsByCategory[selectedCategory];
 
   return (
-    <section className="py-24 bg-card" data-testid="product-grid-section">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div ref={headerRef} className="text-center mb-16">
-          <span className={`text-sm tracking-[0.3em] uppercase text-primary mb-4 block ${headerVisible ? 'animate-blur-in opacity-0' : 'opacity-0'}`} style={headerVisible ? { animationDelay: '0.2s', animationFillMode: 'forwards' } : {}}>
-            Our Collection
-          </span>
-          <h2 className={`font-serif leading-tight text-foreground mb-4 text-balance text-7xl ${headerVisible ? 'animate-blur-in opacity-0' : 'opacity-0'}`} style={headerVisible ? { animationDelay: '0.4s', animationFillMode: 'forwards' } : {}}>
-            Gentle essentials
-          </h2>
-          <p className={`text-lg text-muted-foreground max-w-md mx-auto ${headerVisible ? 'animate-blur-in opacity-0' : 'opacity-0'}`} style={headerVisible ? { animationDelay: '0.6s', animationFillMode: 'forwards' } : {}}>
-            Thoughtfully crafted products for your daily ritual
+    <section
+      ref={sectionRef}
+      className="storefront-section bg-transparent"
+      data-testid="product-grid-section"
+    >
+      <div className="storefront-shell">
+        <div
+          data-product-heading
+          className="mb-12 grid gap-6 lg:grid-cols-[1fr_420px] lg:items-end"
+        >
+          <div>
+            <span className="storefront-kicker">Curated Collection</span>
+            <h2 className="storefront-heading">Gentle Essentials.</h2>
+          </div>
+          <p className="storefront-copy lg:justify-self-end">
+            From nourishing skincare essentials to luxurious
+            beauty must-haves, each item is carefully made to bring comfort,
+            confidence, and a touch of indulgence to your everyday routine.
+           
           </p>
         </div>
 
-        <div className="flex justify-center mb-12">
-          <div className="inline-flex bg-background rounded-full p-1 gap-1 relative">
-            <div
-              className="absolute top-1 bottom-1 bg-foreground rounded-full transition-all duration-300 ease-out shadow-sm"
-              style={{
-                left: selectedCategory === 'Perfumes' ? '4px' : selectedCategory === 'Makeup' ? 'calc(33.333% + 2px)' : 'calc(66.666%)',
-                width: 'calc(33.333% - 4px)'
-              }}
-            />
+        <div className="mb-10 flex flex-col gap-5 border-y border-border py-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <button
                 key={category.value}
                 type="button"
                 data-testid={`category-tab-${category.value.toLowerCase()}`}
-                onClick={() => handleCategoryChange(category.value)}
-                className={`relative z-10 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                onClick={() => setSelectedCategory(category.value)}
+                className={
                   selectedCategory === category.value
-                    ? "text-background"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                    ? "storefront-button min-h-10 px-5 py-2"
+                    : "storefront-button-outline min-h-10 px-5 py-2"
+                }
               >
                 {category.label}
               </button>
             ))}
           </div>
+          <Link
+            href="/shop"
+            data-testid="view-all-products-btn"
+            className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-muted-foreground"
+          >
+            View all products
+            <ArrowRight className="size-4" />
+          </Link>
         </div>
 
-        <div ref={gridRef} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="products-grid">
+        <div
+          className="grid gap-px overflow-hidden border border-border bg-border sm:grid-cols-2 lg:grid-cols-4"
+          data-testid="products-grid"
+        >
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="aspect-square bg-muted rounded-3xl animate-pulse" />
+              <div key={i} className="aspect-[3/4] animate-pulse bg-muted" />
             ))
           ) : filteredProducts.length === 0 ? (
-            <div className="col-span-full text-center py-16 text-muted-foreground" data-testid="no-products">
+            <div
+              className="col-span-full bg-background py-16 text-center text-muted-foreground"
+              data-testid="no-products"
+            >
               No products in this category yet.
             </div>
-          ) : filteredProducts.map((product, index) => (
-            <Link
-              key={`${selectedCategory}-${product.id}`}
-              href={`/product/${product.id}`}
-              data-testid={`product-card-${product.id}`}
-              className={`group transition-all duration-500 ease-out ${
-                isVisible && !isTransitioning ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-              }`}
-              style={{ transitionDelay: isTransitioning ? '0ms' : `${index * 80}ms` }}
-            >
-              <div className="bg-background rounded-3xl overflow-hidden blocks-shadow blocks-transition group-hover:scale-[1.02]">
-                <div className="relative aspect-square bg-muted overflow-hidden">
+          ) : (
+            filteredProducts.map((product) => (
+              <Link
+                key={`${selectedCategory}-${product.id}`}
+                href={`/product/${product.id}`}
+                data-testid={`product-card-${product.id}`}
+                data-featured-product
+                className="group bg-background"
+              >
+                <div className="relative aspect-[4/5] overflow-hidden bg-muted">
                   <Image
                     src={product.image || "/placeholder.svg"}
                     alt={product.name}
                     fill
                     loading="lazy"
                     sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                    className="object-cover blocks-transition group-hover:scale-105"
+                    className="object-cover grayscale transition duration-700 group-hover:scale-105 group-hover:grayscale-0"
                   />
                   {product.badge && (
                     <span
-                      className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs tracking-wide bg-white text-black ${
-                        product.badge === "Sale"
-                          ? "bg-destructive/10 text-destructive"
-                          : product.badge === "New"
-                          ? "bg-primary/10 text-primary"
-                          : "bg-accent text-accent-foreground"
-                      }`}
+                      className="absolute left-4 top-4 border border-white/40 bg-black px-3 py-1 text-[10px] font-semibold uppercase text-white"
+                      style={{ letterSpacing: "0.16em" }}
                     >
                       {product.badge}
                     </span>
                   )}
                   {product.stock <= 0 && (
-                    <div className="absolute inset-0 z-10 bg-background/75 backdrop-blur-[1px] flex items-center justify-center">
-                      <span className="bg-foreground text-background px-4 py-2 rounded-full text-xs font-semibold tracking-[0.2em]">
-                        SOLD OUT
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-[1px]">
+                      <span
+                        className="bg-foreground px-4 py-2 text-xs font-semibold uppercase text-background"
+                        style={{ letterSpacing: "0.18em" }}
+                      >
+                        Sold out
                       </span>
                     </div>
                   )}
@@ -175,11 +193,11 @@ export function ProductGrid() {
                     type="button"
                     data-testid={`quick-add-${product.id}`}
                     disabled={product.stock <= 0}
-                    className="absolute bottom-4 right-4 z-20 w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 blocks-transition blocks-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute bottom-4 right-4 z-20 inline-flex size-11 items-center justify-center bg-background text-foreground opacity-0 transition group-hover:opacity-100 disabled:opacity-50"
                     onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      if (product.stock <= 0) return
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (product.stock <= 0) return;
                       addItem({
                         id: product.id,
                         name: product.name,
@@ -187,41 +205,37 @@ export function ProductGrid() {
                         price: product.price,
                         image: product.image,
                         size: product.size,
-                      })
+                      });
                     }}
                     aria-label="Add to cart"
                   >
-                    <ShoppingBag className="w-4 h-4 text-foreground" />
+                    <ShoppingBag className="size-4" />
                   </button>
                 </div>
                 <div className="p-5">
-                  <h3 className="font-serif text-lg text-foreground mb-1">{product.name}</h3>
-                  <p className="text-xs uppercase tracking-[0.18em] text-primary mb-2">{product.gender}</p>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{product.description}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-foreground">{formatCurrency(product.price)}</span>
-                    {product.originalPrice && (
-                      <span className="text-sm text-muted-foreground line-through">
-                        {formatCurrency(product.originalPrice)}
-                      </span>
-                    )}
+                  <div className="mb-4 flex items-start justify-between gap-4">
+                    <h3 className="font-serif text-2xl font-semibold leading-tight text-foreground">
+                      {product.name}
+                    </h3>
+                    <span className="whitespace-nowrap text-sm font-medium text-foreground">
+                      {formatCurrency(product.price)}
+                    </span>
                   </div>
+                  <p
+                    className="mb-3 text-xs font-medium uppercase text-muted-foreground"
+                    style={{ letterSpacing: "0.16em" }}
+                  >
+                    {product.gender}
+                  </p>
+                  <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
+                    {product.description}
+                  </p>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        <div className="text-center mt-12">
-          <Link
-            href="/shop"
-            data-testid="view-all-products-btn"
-            className="inline-flex items-center justify-center gap-2 bg-transparent border border-foreground/20 text-foreground px-8 py-4 rounded-full text-sm tracking-wide blocks-transition hover:bg-foreground/5"
-          >
-            View All Products
-          </Link>
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -2,80 +2,62 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Menu, X, ShoppingBag, Search, User, Truck } from "lucide-react"
+import { Menu, ShoppingBag, Truck, X } from "lucide-react"
 import { CartDrawer } from "./cart-drawer"
 import { useCart } from "./cart-context"
+
+const navLinks = [
+  { href: "/shop", label: "Shop" },
+  { href: "/", label: "About" },
+]
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { setIsOpen, itemCount } = useCart()
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-4">
-      <nav className="max-w-7xl mx-auto px-6 lg:px-8 backdrop-blur-md rounded-lg py-0 my-0 animate-scale-fade-in bg-[rgba(255,255,255,0.4)] border border-[rgba(255,255,255,0.32)]" style={{ boxShadow: 'rgba(0, 0, 0, 0.1) 0px 10px 50px' }}>
-        <div className="flex items-center justify-between h-[68px]">
-          {/* Mobile menu button */}
+    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5">
+      <nav className="storefront-shell border border-white/20 bg-background/70 py-0 backdrop-blur-xl supports-[backdrop-filter]:bg-background/50">
+        <div className="flex h-12 items-center justify-between">
           <button
             type="button"
-            className="lg:hidden p-2 text-foreground/80 hover:text-foreground blocks-transition"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="storefront-icon-button lg:hidden"
+            onClick={() => setIsMenuOpen((open) => !open)}
             aria-label="Toggle menu"
           >
-            {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
           </button>
 
-          {/* Desktop Navigation - Left */}
-          <div className="hidden lg:flex items-center gap-8">
-            <Link
-              href="/shop"
-              className="text-sm tracking-wide text-foreground/70 hover:text-foreground blocks-transition"
-            >
-              Shop
-            </Link>
-            <Link
-              href="/"
-              className="text-sm tracking-wide text-foreground/70 hover:text-foreground blocks-transition"
-            >
-              About
-            </Link>
-            {/* <Link
-              href="/"
-              className="text-sm tracking-wide text-foreground/70 hover:text-foreground blocks-transition"
-            >
-              Ingredients
-            </Link> */}
+          <div className="hidden items-center gap-7 lg:flex">
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="text-xs font-medium uppercase text-foreground/70 transition-colors hover:text-foreground"
+                style={{ letterSpacing: "0.16em" }}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
 
-          {/* Logo */}
           <Link href="/" className="absolute left-1/2 -translate-x-1/2">
-            <h1 className="font-serif text-3xl tracking-wider text-foreground">Essencia</h1>
+            <span className="font-serif text-xl font-semibold text-foreground sm:text-xl">Essencia</span>
           </Link>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-4">
-            <Link
-              href="/status"
-              className="hidden sm:block p-2 text-foreground/70 hover:text-foreground blocks-transition"
-              aria-label="Search"
-            >
-              <Truck className="w-5 h-5" />
+          <div className="flex items-center gap-2">
+            <Link href="/status" className="storefront-icon-button hidden sm:inline-flex" aria-label="Track order">
+              <Truck className="size-4" />
             </Link>
-            {/* <Link
-              href="/account"
-              className="hidden sm:block p-2 text-foreground/70 hover:text-foreground blocks-transition"
-              aria-label="Account"
-            >
-              <User className="w-5 h-5" />
-            </Link> */}
             <button
               type="button"
               onClick={() => setIsOpen(true)}
-              className="relative p-2 text-foreground/70 hover:text-foreground blocks-transition"
+              className="storefront-icon-button relative"
               aria-label="Cart"
             >
-              <ShoppingBag className="w-5 h-5" />
+              <ShoppingBag className="size-4" />
               {itemCount > 0 && (
-                <span className="absolute -top-0 -right-0 w-4 h-4 bg-primary text-primary-foreground text-[10px] flex items-center justify-center rounded-full">
+                <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-foreground text-[10px] font-semibold text-background">
                   {itemCount}
                 </span>
               )}
@@ -85,37 +67,21 @@ export function Header() {
 
         <CartDrawer />
 
-        {/* Mobile Navigation */}
-        <div
-          className={`lg:hidden overflow-hidden blocks-transition ${
-            isMenuOpen ? "max-h-64 pb-6" : "max-h-0"
-          }`}
-        >
-          <div className="flex flex-col gap-4 pt-4 border-t border-border/50">
-            <Link
-              href="/shop"
-              className="text-sm tracking-wide text-foreground/70 hover:text-foreground blocks-transition"
-            >
-              Shop
-            </Link>
-            <Link
-              href="/"
-              className="text-sm tracking-wide text-foreground/70 hover:text-foreground blocks-transition"
-            >
-              About
-            </Link>
-            <Link
-              href="/"
-              className="text-sm tracking-wide text-foreground/70 hover:text-foreground blocks-transition"
-            >
-              Ingredients
-            </Link>
-            <Link
-              href="/"
-              className="text-sm tracking-wide text-foreground/70 hover:text-foreground blocks-transition"
-            >
-              Account
-            </Link>
+        <div className={`overflow-hidden transition-[max-height,padding] duration-300 lg:hidden ${isMenuOpen ? "max-h-56 pb-5" : "max-h-0"}`}>
+          <div className="border-t border-border pt-4">
+            <div className="grid gap-2">
+              {[...navLinks, { href: "/status", label: "Track" }].map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="border border-border px-4 py-3 text-sm font-medium uppercase text-foreground"
+                  style={{ letterSpacing: "0.14em" }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </nav>

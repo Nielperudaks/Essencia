@@ -9,6 +9,7 @@ import { Footer } from "@/components/blocks/footer"
 import { api, type Product } from "@/lib/api"
 import { formatCurrency } from "@/lib/currency"
 import { useCart } from "@/components/blocks/cart-context"
+import { useStorefrontGsap } from "@/hooks/use-storefront-gsap"
 
 const PRODUCTS_PER_BATCH = 9
 const categoriesList = ["all", "Perfumes", "Makeup", "Skincare"]
@@ -36,9 +37,20 @@ export default function ShopPage() {
   const [selectedGender, setSelectedGender] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
+  const pageRef = useRef<HTMLElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const requestIdRef = useRef(0)
+
+  useStorefrontGsap(pageRef, ({ gsap }) => {
+    gsap.from("[data-shop-reveal]", {
+      y: 32,
+      opacity: 0,
+      duration: 0.75,
+      stagger: 0.08,
+      ease: "power3.out",
+    })
+  })
 
   useEffect(() => {
     const requestId = requestIdRef.current + 1
@@ -154,29 +166,29 @@ export default function ShopPage() {
   }, [hasMore, loadMoreProducts, loadingInitial, loadingMore])
 
   return (
-    <main className="min-h-screen" data-testid="shop-page">
+    <main ref={pageRef} className="min-h-screen bg-background" data-testid="shop-page">
       <Header />
-      <div className="pt-28 pb-20">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <span className="text-sm tracking-[0.3em] uppercase text-primary mb-4 block">
-              Our Collection
-            </span>
-            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-foreground mb-4 text-balance">
-              Shop All Products
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-md mx-auto">
-              Discover our complete range of premium fragrances
+      <div className="pt-32 pb-20">
+        <div className="storefront-shell">
+          <div data-shop-reveal className="mb-12 grid gap-6 lg:grid-cols-[1fr_420px] lg:items-end">
+            <div>
+              <span className="storefront-kicker">Collection</span>
+              <h1 className="storefront-display">
+                Shop the edit.
+              </h1>
+            </div>
+            <p className="storefront-copy lg:justify-self-end">
+              Discover a precise selection of fragrance, makeup, and skincare essentials in a clean monochrome catalog.
             </p>
           </div>
 
-          <div className="flex items-center justify-between mb-10 pb-6 border-b border-border/50">
+          <div data-shop-reveal className="mb-10 flex items-center justify-between border-y border-border py-5">
             <button
               type="button"
               onClick={() => setShowFilters(!showFilters)}
-              className="lg:hidden inline-flex items-center gap-2 text-sm text-foreground"
+              className="storefront-button-outline min-h-10 px-4 py-2 lg:hidden"
             >
-              <SlidersHorizontal className="w-4 h-4" />
+              <SlidersHorizontal className="size-4" />
               Filters
             </button>
 
@@ -188,10 +200,10 @@ export default function ShopPage() {
                     type="button"
                     data-testid={`shop-category-${category}`}
                     onClick={() => setSelectedCategory(category)}
-                    className={`px-4 py-2 rounded-full text-sm capitalize blocks-transition ${
+                    className={`min-h-10 px-4 py-2 text-sm capitalize transition-colors ${
                       selectedCategory === category
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card text-foreground/70 hover:text-foreground blocks-shadow"
+                        ? "bg-foreground text-background"
+                        : "border border-border bg-background text-foreground/70 hover:text-foreground"
                     }`}
                   >
                     {category}
@@ -205,10 +217,10 @@ export default function ShopPage() {
                     type="button"
                     data-testid={`shop-gender-${gender}`}
                     onClick={() => setSelectedGender(gender)}
-                    className={`px-4 py-2 rounded-full text-sm blocks-transition ${
+                    className={`min-h-10 px-4 py-2 text-sm transition-colors ${
                       selectedGender === gender
                         ? "bg-foreground text-background"
-                        : "bg-card text-foreground/70 hover:text-foreground blocks-shadow"
+                        : "border border-border bg-background text-foreground/70 hover:text-foreground"
                     }`}
                   >
                     {gender === "all" ? "All" : gender}
@@ -217,7 +229,7 @@ export default function ShopPage() {
               </div>
             </div>
 
-            <span className="text-sm text-muted-foreground" data-testid="product-count">
+            <span className="text-sm font-medium text-muted-foreground" data-testid="product-count">
               {totalProducts} {totalProducts === 1 ? "product" : "products"}
             </span>
           </div>
@@ -226,13 +238,14 @@ export default function ShopPage() {
             <div className="lg:hidden fixed inset-0 z-50 bg-background">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-8">
-                  <h2 className="font-serif text-2xl text-foreground">Filters</h2>
+                  <h2 className="font-serif text-4xl font-semibold text-foreground">Filters</h2>
                   <button
                     type="button"
                     onClick={() => setShowFilters(false)}
-                    className="p-2 text-foreground/70 hover:text-foreground"
+                    className="storefront-icon-button"
+                    aria-label="Close filters"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="size-5" />
                   </button>
                 </div>
                 <div className="space-y-6">
@@ -246,10 +259,10 @@ export default function ShopPage() {
                         setSelectedCategory(category)
                         setShowFilters(false)
                       }}
-                      className={`w-full px-6 py-4 rounded-2xl text-left capitalize blocks-transition ${
+                      className={`w-full border px-5 py-4 text-left capitalize transition-colors ${
                         selectedCategory === category
                           ? "bg-primary text-primary-foreground"
-                          : "bg-card text-foreground blocks-shadow"
+                          : "border-border bg-background text-foreground"
                       }`}
                     >
                       {category}
@@ -263,13 +276,13 @@ export default function ShopPage() {
                         key={gender}
                         type="button"
                         onClick={() => {
-                          setSelectedGender(gender)
-                          setShowFilters(false)
-                        }}
-                        className={`w-full px-6 py-4 rounded-2xl text-left blocks-transition ${
+                        setSelectedGender(gender)
+                        setShowFilters(false)
+                      }}
+                        className={`w-full border px-5 py-4 text-left transition-colors ${
                           selectedGender === gender
                             ? "bg-foreground text-background"
-                            : "bg-card text-foreground blocks-shadow"
+                            : "border-border bg-background text-foreground"
                         }`}
                       >
                         {gender === "all" ? "All" : gender}
@@ -281,13 +294,13 @@ export default function ShopPage() {
             </div>
           )}
 
-          <div ref={gridRef} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div ref={gridRef} className="grid gap-px overflow-hidden border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
             {loadingInitial ? (
               Array.from({ length: PRODUCTS_PER_BATCH }).map((_, i) => (
-                <div key={i} className="aspect-[3/4] bg-muted rounded-3xl animate-pulse" />
+                <div key={i} className="aspect-[3/4] bg-muted animate-pulse" />
               ))
             ) : products.length === 0 ? (
-              <div className="col-span-full text-center py-20 text-muted-foreground">
+              <div className="col-span-full bg-background py-20 text-center text-muted-foreground">
                 No products found.
               </div>
             ) : products.map((product, index) => (
@@ -312,7 +325,7 @@ export default function ShopPage() {
                 <button
                   type="button"
                   onClick={loadMoreProducts}
-                  className="inline-flex items-center justify-center rounded-full border border-foreground/20 px-8 py-4 text-sm tracking-wide text-foreground blocks-transition hover:bg-foreground/5"
+                  className="storefront-button-outline"
                 >
                   Load more
                 </button>
@@ -336,13 +349,13 @@ function ProductCard({ product, index, isVisible }: { product: Product; index: n
     <Link
       href={`/product/${product.id}`}
       data-testid={`shop-product-${product.id}`}
-      className={`group transition-all duration-700 ease-out ${
+      className={`group bg-background transition-all duration-700 ease-out ${
         isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
       }`}
       style={{ transitionDelay: `${index * 80}ms` }}
     >
-      <div className="bg-card rounded-3xl overflow-hidden blocks-shadow blocks-transition group-hover:scale-[1.02]">
-        <div className="relative aspect-square bg-muted overflow-hidden">
+      <div>
+        <div className="relative aspect-[4/5] bg-muted overflow-hidden">
           <div
             className={`absolute inset-0 bg-gradient-to-br from-muted via-muted/50 to-muted animate-pulse transition-opacity duration-500 ${
               imageLoaded ? 'opacity-0' : 'opacity-100'
@@ -354,27 +367,22 @@ function ProductCard({ product, index, isVisible }: { product: Product; index: n
             fill
             loading="lazy"
             sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-            className={`object-cover blocks-transition group-hover:scale-105 transition-opacity duration-500 ${
+            className={`object-cover grayscale transition duration-700 group-hover:scale-105 group-hover:grayscale-0 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
             onLoad={() => setImageLoaded(true)}
           />
           {product.badge && (
             <span
-              className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs tracking-wide ${
-                product.badge === "Sale"
-                  ? "bg-destructive/10 text-destructive"
-                  : product.badge === "New"
-                  ? "bg-primary/10 text-primary"
-                  : "bg-accent text-accent-foreground"
-              }`}
+              className="absolute top-4 left-4 bg-black px-3 py-1 text-[10px] font-semibold uppercase text-white"
+              style={{ letterSpacing: "0.16em" }}
             >
               {product.badge}
             </span>
           )}
           {isSoldOut && (
             <div className="absolute inset-0 z-10 bg-background/75 backdrop-blur-[1px] flex items-center justify-center">
-              <span className="bg-foreground text-background px-4 py-2 rounded-full text-xs font-semibold tracking-[0.2em]">
+              <span className="bg-foreground text-background px-4 py-2 text-xs font-semibold uppercase" style={{ letterSpacing: "0.16em" }}>
                 SOLD OUT
               </span>
             </div>
@@ -382,7 +390,7 @@ function ProductCard({ product, index, isVisible }: { product: Product; index: n
           <button
             type="button"
             disabled={isSoldOut}
-            className="absolute bottom-4 right-4 z-20 w-12 h-12 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 blocks-transition blocks-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+            className="absolute bottom-4 right-4 z-20 flex size-12 items-center justify-center bg-background text-foreground opacity-0 transition group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
@@ -398,15 +406,17 @@ function ProductCard({ product, index, isVisible }: { product: Product; index: n
             }}
             aria-label="Add to cart"
           >
-            <ShoppingBag className="w-5 h-5 text-foreground" />
+            <ShoppingBag className="size-5" />
           </button>
         </div>
-        <div className="p-6">
-          <h3 className="font-serif text-xl text-foreground mb-1">{product.name}</h3>
-          <p className="text-xs uppercase tracking-[0.18em] text-primary mb-2">{product.gender}</p>
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{product.description}</p>
+        <div className="p-5">
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <h3 className="font-serif text-2xl font-semibold leading-tight text-foreground">{product.name}</h3>
+            <span className="whitespace-nowrap text-sm font-medium text-foreground">{formatCurrency(product.price)}</span>
+          </div>
+          <p className="mb-3 text-xs font-medium uppercase text-muted-foreground" style={{ letterSpacing: "0.16em" }}>{product.gender}</p>
+          <p className="mb-4 line-clamp-2 text-sm leading-6 text-muted-foreground">{product.description}</p>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-medium text-foreground">{formatCurrency(product.price)}</span>
             {product.originalPrice && (
               <span className="text-sm text-muted-foreground line-through">
                 {formatCurrency(product.originalPrice)}
