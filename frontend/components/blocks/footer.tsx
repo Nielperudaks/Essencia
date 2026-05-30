@@ -13,8 +13,7 @@ const footerLinks = {
   support: [
     { name: "Track Order", href: "/status" },
     { name: "Checkout", href: "/payment" },
-    { name: "Shipping", href: "/" },
-    { name: "Contact", href: "/" },
+
   ],
 }
 

@@ -70,7 +70,7 @@ export function FeatureSection() {
   return (
     <section
       ref={sectionRef}
-      className="storefront-section overflow-hidden border-y border-border bg-foreground text-background"
+      className="storefront-section overflow-hidden border-y border-border bg-foreground text-background relative"
     >
       <div className="storefront-shell">
         <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
@@ -96,21 +96,21 @@ export function FeatureSection() {
               data-story-media="large"
             >
               <Image
-                src="/images/bento-skin-model.jpg"
+                src="https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/2.png"
                 alt="Essencia ritual"
                 fill
                 sizes="(min-width: 1024px) 40vw, 100vw"
-                className="object-cover grayscale"
+                className="object-cover "
               />
             </div>
-            <div className="space-y-4">
-              <div className="storefront-media aspect-[4/3] border-background/20 bg-background/10">
+            <div className="space-y-4 ">
+              <div className="storefront-media aspect-[4/3] border-background/20 bg-background/10 grayscale hover:grayscale-0 hover:scale-125 duration-500 hover:z-10">
                 <Image
-                  src="/images/natural-leaf.jpg"
+                  src="https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/1.png"
                   alt="Natural ingredient texture"
                   fill
                   sizes="(min-width: 1024px) 25vw, 100vw"
-                  className="object-cover grayscale"
+                  className="object-cover"
                 />
               </div>
               <video
@@ -118,7 +118,7 @@ export function FeatureSection() {
                 muted
                 loop
                 playsInline
-                className="aspect-[4/5] w-full border border-background/20 object-cover grayscale"
+                className="aspect-[4/5] w-full border border-background/20 object-cover grayscale hover:grayscale-0 hover:scale-125 duration-500"
               >
                 <source
                   src="https://4fisedqbxckj3iqj.public.blob.vercel-storage.com/feature-WOHu9u8Rlj90v6ytwrsmnNluBvDtTE"
