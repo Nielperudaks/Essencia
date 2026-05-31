@@ -31,7 +31,6 @@ export default function PaymentPage() {
   const [streetHouseNo, setStreetHouseNo] = useState("")
   const [zipcode, setZipcode] = useState("")
   const [facebookAccount, setFacebookAccount] = useState("")
-  const [shippingMode, setShippingMode] = useState<ShippingMode>("LBC")
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -75,7 +74,6 @@ export default function PaymentPage() {
       streetHouseNo,
       zipcode,
       facebookAccount,
-      shippingMode,
     ]
     if (requiredFields.some((field) => !field.trim())) {
       setError("Please complete all required customer and shipping fields")
@@ -98,7 +96,7 @@ export default function PaymentPage() {
         street_house_no: streetHouseNo,
         zipcode,
         facebook_account: facebookAccount,
-        shipping_mode: shippingMode,
+        // shipping_mode: shippingMode,
         items: items.map((i) => ({
           id: i.id,
           name: i.name,
@@ -216,7 +214,7 @@ export default function PaymentPage() {
                   <input type="text" placeholder="Barangay *" value={barangay} onChange={(e) => setBarangay(e.target.value)} className="storefront-input" data-testid="input-barangay" />
                   <input type="text" placeholder="Street/house no. *" value={streetHouseNo} onChange={(e) => setStreetHouseNo(e.target.value)} className="storefront-input" data-testid="input-street-house-no" />
                   <input type="text" placeholder="Zipcode *" value={zipcode} onChange={(e) => setZipcode(e.target.value)} className="storefront-input" data-testid="input-zipcode" />
-                  <div className="sm:col-span-2">
+                  {/* <div className="sm:col-span-2">
                     <label htmlFor="shipping-mode" className="text-sm font-medium text-foreground mb-2 block">
                       Shipping Mode *
                     </label>
@@ -236,7 +234,7 @@ export default function PaymentPage() {
                         ? "Shipping fee will be COD or COP."
                         : "Shipping fee will be COD."}
                     </p>
-                  </div>
+                  </div> */}
                 </div>
               </section>
 
@@ -350,10 +348,10 @@ export default function PaymentPage() {
                   <span>Subtotal ({items.length} items)</span>
                   <span data-testid="summary-subtotal">{formatCurrency(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-muted-foreground">
+                {/* <div className="flex justify-between text-muted-foreground">
                   <span>Shipping</span>
                   <span>COD / COP</span>
-                </div>
+                </div> */}
                 <div className="border-t border-border pt-3 flex justify-between text-base font-medium text-foreground">
                   <span>Total</span>
                   <span data-testid="summary-total">{formatCurrency(total)}</span>
