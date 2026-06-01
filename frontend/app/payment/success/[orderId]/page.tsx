@@ -8,7 +8,7 @@ import { Footer } from "@/components/blocks/footer"
 import { api, type Order } from "@/lib/api"
 import { formatCurrency } from "@/lib/currency"
 
-const FACEBOOK_PAGE = process.env.NEXT_PUBLIC_FACEBOOK_PAGE_USERNAME || process.env.NEXT_PUBLIC_FACEBOOK_PAGE_ID || "essencia"
+const FACEBOOK_PAGE = process.env.NEXT_PUBLIC_FACEBOOK_PAGE_ID || "essencia"
 
 export default function PaymentSuccessPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = use(params)

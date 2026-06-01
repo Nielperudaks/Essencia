@@ -181,11 +181,11 @@ export const api = {
       method: "POST",
       headers: authHeaders(token),
     }),
-  confirmShipping: (token: string, id: string, waybill: string, shipmentFee: number) =>
+  confirmShipping: (token: string, id: string, waybill: string) =>
     http<Order>(`/api/admin/orders/${id}/ship`, {
       method: "POST",
       headers: authHeaders(token),
-      body: JSON.stringify({ waybill, shipment_fee: shipmentFee }),
+      body: JSON.stringify({ waybill }),
     }),
   rejectOrder: (token: string, id: string) =>
     http<Order>(`/api/admin/orders/${id}/reject`, {

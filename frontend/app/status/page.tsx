@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { CheckCircle2, ClipboardList, PackageCheck, Search, Truck } from "lucide-react"
+import { CheckCircle2, ClipboardList, MessageCircle, PackageCheck, Search, Truck } from "lucide-react"
 import { Header } from "@/components/blocks/header"
 import { Footer } from "@/components/blocks/footer"
 import { api, wsUrl, type Order } from "@/lib/api"
@@ -23,6 +23,8 @@ const STATUS_INDEX: Record<Order["status"], number> = {
   shipped: 2,
   received: 3,
 }
+
+const messengerUrl = `https://m.me/${encodeURIComponent(process.env.NEXT_PUBLIC_FACEBOOK_PAGE_ID || "essencia")}`
 
 export default function StatusPage() {
   return (
@@ -156,7 +158,7 @@ function StatusContent() {
                     <Info label="Email" value={order.customer_email} />
                     <Info label="Phone" value={order.customer_phone || "-"} />
                     <Info label="Facebook" value={order.facebook_account || "-"} />
-                    <Info label="Shipping Mode" value={order.shipping_mode} />
+                    {/* <Info label="Shipping Mode" value={order.shipping_mode} /> */}
                     <Info label="Waybill" value={order.waybill || "Not available yet"} />
                     <Info label="Address" value={order.customer_address || "-"} />
                     <Info label="Submitted" value={new Date(order.created_at).toLocaleString()} />
@@ -225,6 +227,10 @@ function StatusContent() {
 
                 <Link href="/shop" className="storefront-button-outline mt-4 w-full">
                   Continue Shopping
+                </Link>
+                <Link href={messengerUrl} className="storefront-button mt-4 w-full">
+                  <MessageCircle className="w-4 h-4" />
+                  Message Us
                 </Link>
               </aside>
             </div>

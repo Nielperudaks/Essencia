@@ -35,7 +35,6 @@ const workSans = Work_Sans({
 export const metadata: Metadata = {
   title: 'Essencia — Natural Skincare',
   description: 'Premium natural skincare and body care products. Glow gently with blocks.',
-  generator: 'v0.app',
   keywords: ['skincare', 'natural', 'organic', 'beauty', 'body care', 'cruelty-free'],
   icons: {
     icon: [
