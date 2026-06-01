@@ -17,7 +17,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [waybill, setWaybill] = useState("")
-  const [shipmentFee, setShipmentFee] = useState("")
+  // const [shipmentFee, setShipmentFee] = useState("")
 
   useEffect(() => {
     if (authLoading) return
@@ -75,14 +75,14 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
 
   async function confirmShipping() {
     if (!token || !waybill.trim()) return
-    const fee = Number.parseFloat(shipmentFee)
-    if (!Number.isFinite(fee) || fee < 0) return
+    // const fee = Number.parseFloat(shipmentFee)
+    // if (!Number.isFinite(fee) || fee < 0) return
     setBusy(true)
     try {
-      const updated = await api.confirmShipping(token, id, waybill.trim(), fee)
+      const updated = await api.confirmShipping(token, id, waybill.trim())
       setOrder(updated)
       setWaybill("")
-      setShipmentFee("")
+      // setShipmentFee("")
     } finally {
       setBusy(false)
     }
@@ -114,7 +114,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                 <Info label="Facebook" value={order.facebook_account || "—"} />
                 <Info label="Shipping Mode" value={order.shipping_mode || "—"} />
                 <Info label="Waybill" value={order.waybill || "—"} />
-                <Info label="Shipment Fee" value={formatCurrency(order.shipment_fee || 0)} />
+                {/* <Info label="Shipment Fee" value={formatCurrency(order.shipment_fee || 0)} /> */}
                 <Info label="Province" value={order.province || "—"} />
                 <Info label="Town/City" value={order.town_city || "—"} />
                 <Info label="Barangay" value={order.barangay || "—"} />
@@ -188,7 +188,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                   className="w-full px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary"
                   data-testid="shipping-waybill-input"
                 />
-                <input
+                {/* <input
                   type="number"
                   min="0"
                   step="0.01"
@@ -197,8 +197,8 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                   placeholder="Shipment Fee *"
                   className="w-full px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary"
                   data-testid="shipping-fee-input"
-                />
-                <button type="button" onClick={confirmShipping} disabled={busy || !waybill.trim() || !shipmentFee.trim() || Number.parseFloat(shipmentFee) < 0} data-testid="confirm-shipping-btn" className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-full font-medium hover:bg-blue-700 disabled:opacity-50">
+                /> */}
+                <button type="button" onClick={confirmShipping} disabled={busy || !waybill.trim() } data-testid="confirm-shipping-btn" className="w-full inline-flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-full font-medium hover:bg-blue-700 disabled:opacity-50">
                   <Truck className="w-4 h-4" /> Confirm Shipping
                 </button>
               </div>
