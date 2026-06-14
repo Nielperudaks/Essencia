@@ -3,18 +3,19 @@
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Package, CreditCard, ClipboardList, LogOut, Plus, Pencil, Trash2, Check, X, Eye, Bell, Truck } from "lucide-react"
+import { Package, CreditCard, ClipboardList, LogOut, Plus, Pencil, Trash2, Check, X, Eye, Bell, Truck, Tag, CircleSlash2 } from "lucide-react"
 import { useAdminAuth } from "@/components/admin/admin-auth-context"
-import { api, fileToBase64, wsUrl, type Product, type Bank, type Order } from "@/lib/api"
+import { api, fileToBase64, wsUrl, type Product, type Bank, type Order, type PromoCode } from "@/lib/api"
 import { formatCurrency } from "@/lib/currency"
 
-type Tab = "products" | "banks" | "orders"
+type Tab = "products" | "banks" | "orders" | "promo-codes"
 
 export default function AdminDashboard() {
   const { admin, token, logout, loading } = useAdminAuth()
   const [tab, setTab] = useState<Tab>("orders")
   const [products, setProducts] = useState<Product[]>([])
   const [banks, setBanks] = useState<Bank[]>([])
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [refreshTick, setRefreshTick] = useState(0)
 
@@ -24,6 +25,7 @@ export default function AdminDashboard() {
     if (!token) return
     api.listProducts().then(setProducts).catch(() => {})
     api.listBanks().then(setBanks).catch(() => {})
+    api.listPromoCodes(token).then(setPromoCodes).catch(() => {})
     api.listOrders(token).then(setOrders).catch(() => {})
   }, [token, refreshTick])
 
@@ -42,6 +44,9 @@ export default function AdminDashboard() {
       }
       if (message.type === "banks.changed") {
         api.listBanks().then(setBanks).catch(() => {})
+      }
+      if (message.type === "promo_codes.changed") {
+        api.listPromoCodes(token).then(setPromoCodes).catch(() => {})
       }
     }
     return () => {
@@ -85,11 +90,13 @@ export default function AdminDashboard() {
           <TabButton active={tab === "orders"} onClick={() => setTab("orders")} icon={<ClipboardList className="w-4 h-4" />} label="Orders" badge={pendingCount} testid="tab-orders" />
           <TabButton active={tab === "products"} onClick={() => setTab("products")} icon={<Package className="w-4 h-4" />} label="Products" testid="tab-products" />
           <TabButton active={tab === "banks"} onClick={() => setTab("banks")} icon={<CreditCard className="w-4 h-4" />} label="Banks" testid="tab-banks" />
+          <TabButton active={tab === "promo-codes"} onClick={() => setTab("promo-codes")} icon={<Tag className="w-4 h-4" />} label="Promo Codes" testid="tab-promo-codes" />
         </div>
 
         {tab === "orders" && <OrdersPanel orders={orders} token={token} onRefresh={refresh} />}
         {tab === "products" && <ProductsPanel products={products} token={token} onRefresh={refresh} />}
         {tab === "banks" && <BanksPanel banks={banks} token={token} onRefresh={refresh} />}
+        {tab === "promo-codes" && <PromoCodesPanel promoCodes={promoCodes} token={token} onRefresh={refresh} />}
       </div>
     </main>
   )
@@ -733,4 +740,274 @@ function BankForm({ token, initial, onClose, onSaved }: { token: string; initial
       </div>
     </div>
   )
+}
+
+/* ---------- PROMO CODES ---------- */
+function PromoCodesPanel({ promoCodes, token, onRefresh }: { promoCodes: PromoCode[]; token: string; onRefresh: () => void }) {
+  const [editing, setEditing] = useState<PromoCode | null>(null)
+  const [creating, setCreating] = useState(false)
+
+  async function disable(id: string) {
+    if (!confirm("Disable this promo code?")) return
+    await api.disablePromoCode(token, id)
+    onRefresh()
+  }
+
+  async function remove(id: string) {
+    if (!confirm("Delete this promo code?")) return
+    await api.deletePromoCode(token, id)
+    onRefresh()
+  }
+
+  return (
+    <div data-testid="promo-codes-panel">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="font-serif text-3xl">Promo Codes</h2>
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          data-testid="add-promo-code-btn"
+          className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-full text-sm font-medium hover:bg-primary/90"
+        >
+          <Plus className="w-4 h-4" /> Add Promo Code
+        </button>
+      </div>
+
+      <div className="bg-card rounded-3xl overflow-hidden blocks-shadow">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40">
+            <tr className="text-left">
+              <th className="px-5 py-3 font-medium">Code</th>
+              <th className="px-5 py-3 font-medium">Amount</th>
+              <th className="px-5 py-3 font-medium">Availability</th>
+              <th className="px-5 py-3 font-medium">Status</th>
+              <th className="px-5 py-3 font-medium text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {promoCodes.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="text-center py-10 text-muted-foreground">
+                  No promo codes yet.
+                </td>
+              </tr>
+            ) : (
+              promoCodes.map((promo) => (
+                <tr key={promo.id} className="border-t border-border" data-testid={`promo-code-row-${promo.id}`}>
+                  <td className="px-5 py-4 font-medium">{promo.code}</td>
+                  <td className="px-5 py-4">{formatCurrency(promo.amount)}</td>
+                  <td className="px-5 py-4">
+                    <div className="text-xs text-muted-foreground">
+                      {formatPromoDate(promo.starts_at)} - {formatPromoDate(promo.ends_at)}
+                    </div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <PromoStatusBadge status={promo.status} active={promo.active} />
+                  </td>
+                  <td className="px-5 py-4 text-right space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditing(promo)}
+                      data-testid={`edit-promo-code-${promo.id}`}
+                      className="p-2 rounded-full hover:bg-muted"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => disable(promo.id)}
+                      disabled={!promo.active}
+                      data-testid={`disable-promo-code-${promo.id}`}
+                      className="p-2 rounded-full hover:bg-destructive/10 text-destructive disabled:opacity-40"
+                    >
+                      <CircleSlash2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => remove(promo.id)}
+                      data-testid={`delete-promo-code-${promo.id}`}
+                      className="p-2 rounded-full hover:bg-destructive/10 text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {(creating || editing) && (
+        <PromoCodeForm
+          token={token}
+          initial={editing}
+          onClose={() => {
+            setCreating(false)
+            setEditing(null)
+          }}
+          onSaved={() => {
+            setCreating(false)
+            setEditing(null)
+            onRefresh()
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function PromoCodeForm({ token, initial, onClose, onSaved }: { token: string; initial: PromoCode | null; onClose: () => void; onSaved: () => void }) {
+  const [code, setCode] = useState(initial?.code || "")
+  const [amount, setAmount] = useState(initial?.amount?.toString() || "")
+  const [startsAt, setStartsAt] = useState(initial ? toDateTimeLocal(initial.starts_at) : defaultStartDateTimeLocal())
+  const [endsAt, setEndsAt] = useState(initial ? toDateTimeLocal(initial.ends_at) : defaultEndDateTimeLocal())
+  const [active, setActive] = useState(initial?.active ?? true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function save() {
+    setError(null)
+    if (!code.trim()) {
+      setError("Code is required")
+      return
+    }
+    const parsedAmount = Number.parseFloat(amount)
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setError("Amount must be greater than 0")
+      return
+    }
+    if (!startsAt || !endsAt) {
+      setError("Availability range is required")
+      return
+    }
+    const starts = new Date(startsAt)
+    const ends = new Date(endsAt)
+    if (Number.isNaN(starts.getTime()) || Number.isNaN(ends.getTime())) {
+      setError("Availability range is invalid")
+      return
+    }
+    setSaving(true)
+    try {
+      const payload = {
+        code: code.trim(),
+        amount: parsedAmount,
+        starts_at: starts.toISOString(),
+        ends_at: ends.toISOString(),
+        active,
+      }
+      if (initial) await api.updatePromoCode(token, initial.id, payload)
+      else await api.createPromoCode(token, payload)
+      onSaved()
+    } catch (e) {
+      const err = e as Error
+      setError(err.message || "Save failed")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-foreground/50 z-50 flex items-center justify-center p-4" onClick={onClose} data-testid="promo-code-form-modal">
+      <div className="bg-card rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between">
+          <h3 className="font-serif text-2xl">{initial ? "Edit Promo Code" : "New Promo Code"}</h3>
+          <button type="button" onClick={onClose} className="p-2 hover:bg-muted rounded-full"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="p-6 space-y-4">
+          <input
+            data-testid="promo-code-input"
+            className="w-full px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary"
+            placeholder="Promo code *"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
+          <input
+            data-testid="promo-amount-input"
+            type="number"
+            min="0"
+            step="0.01"
+            className="w-full px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary"
+            placeholder="Amount off *"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">Start date</label>
+              <input
+                data-testid="promo-start-input"
+                type="datetime-local"
+                className="w-full px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary"
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs uppercase tracking-wider text-muted-foreground mb-1 block">End date</label>
+              <input
+                data-testid="promo-end-input"
+                type="datetime-local"
+                className="w-full px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary"
+                value={endsAt}
+                onChange={(e) => setEndsAt(e.target.value)}
+              />
+            </div>
+          </div>
+          <label className="flex items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={active}
+              onChange={(e) => setActive(e.target.checked)}
+              data-testid="promo-active-input"
+            />
+            Active
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Promo automatically expires outside availability range or when disabled.
+          </p>
+
+          {error && <div className="text-sm text-destructive bg-destructive/10 px-4 py-3 rounded-2xl">{error}</div>}
+
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-3 rounded-full border border-border hover:bg-muted">Cancel</button>
+            <button type="button" onClick={save} disabled={saving} data-testid="promo-save-btn" className="flex-1 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50">
+              {saving ? "Saving..." : "Save Promo Code"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PromoStatusBadge({ status, active }: { status: PromoCode["status"]; active: boolean }) {
+  const map: Record<PromoCode["status"], string> = {
+    active: "bg-green-100 text-green-800",
+    disabled: "bg-slate-100 text-slate-800",
+    scheduled: "bg-amber-100 text-amber-800",
+    expired: "bg-red-100 text-red-800",
+  }
+  const label = !active ? "disabled" : status
+  return <span className={`px-2.5 py-1 rounded-full text-xs capitalize ${map[status] || "bg-muted text-foreground"}`}>{label}</span>
+}
+
+function formatPromoDate(value: string) {
+  return new Date(value).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })
+}
+
+function toDateTimeLocal(value: string) {
+  const date = new Date(value)
+  const offset = date.getTimezoneOffset() * 60000
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16)
+}
+
+function defaultStartDateTimeLocal() {
+  return toDateTimeLocal(new Date().toISOString())
+}
+
+function defaultEndDateTimeLocal() {
+  const end = new Date()
+  end.setDate(end.getDate() + 30)
+  return toDateTimeLocal(end.toISOString())
 }

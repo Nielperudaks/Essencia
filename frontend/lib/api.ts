@@ -38,6 +38,27 @@ export type Bank = {
   qr_image: string
 }
 
+export type PromoCode = {
+  id: string
+  code: string
+  amount: number
+  starts_at: string
+  ends_at: string
+  active: boolean
+  status: "active" | "disabled" | "scheduled" | "expired"
+  created_at: string
+  updated_at: string
+}
+
+export type PromoCodeValidation = {
+  valid: boolean
+  code: string
+  discount_amount: number
+  subtotal: number
+  total: number
+  promo_code: PromoCode
+}
+
 export type OrderItem = {
   id: string
   name: string
@@ -66,6 +87,8 @@ export type Order = {
   items: OrderItem[]
   subtotal: number
   total: number
+  promo_code: string
+  promo_discount: number
   bank_id: string | null
   bank_name: string
   payment_proof: string
@@ -171,6 +194,35 @@ export const api = {
     http<{ deleted: boolean }>(`/api/admin/banks/${id}`, {
       method: "DELETE",
       headers: authHeaders(token),
+    }),
+  listPromoCodes: (token: string) =>
+    http<PromoCode[]>(`/api/admin/promo-codes`, { headers: authHeaders(token) }),
+  createPromoCode: (token: string, promo: Partial<PromoCode>) =>
+    http<PromoCode>(`/api/admin/promo-codes`, {
+      method: "POST",
+      headers: authHeaders(token),
+      body: JSON.stringify(promo),
+    }),
+  updatePromoCode: (token: string, id: string, promo: Partial<PromoCode>) =>
+    http<PromoCode>(`/api/admin/promo-codes/${id}`, {
+      method: "PUT",
+      headers: authHeaders(token),
+      body: JSON.stringify(promo),
+    }),
+  disablePromoCode: (token: string, id: string) =>
+    http<PromoCode>(`/api/admin/promo-codes/${id}/disable`, {
+      method: "POST",
+      headers: authHeaders(token),
+    }),
+  deletePromoCode: (token: string, id: string) =>
+    http<{ deleted: boolean }>(`/api/admin/promo-codes/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(token),
+    }),
+  validatePromoCode: (code: string, subtotal: number) =>
+    http<PromoCodeValidation>(`/api/promo-codes/validate`, {
+      method: "POST",
+      body: JSON.stringify({ code, subtotal }),
     }),
   listOrders: (token: string) =>
     http<Order[]>(`/api/admin/orders`, { headers: authHeaders(token) }),

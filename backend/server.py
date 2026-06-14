@@ -195,6 +195,8 @@ async def init_db():
     await db.products.create_index("gender")
     await db.products.create_index("created_at")
     await db.banks.create_index("created_at")
+    await db.promo_codes.create_index("code_normalized", unique=True)
+    await db.promo_codes.create_index("created_at")
     await db.orders.create_index("created_at")
     await db.orders.create_index("status")
 
@@ -327,6 +329,19 @@ class BankIn(BaseModel):
     qr_image: str = ""
 
 
+class PromoCodeIn(BaseModel):
+    code: str = Field(..., min_length=1)
+    amount: float = Field(..., gt=0)
+    starts_at: datetime
+    ends_at: datetime
+    active: bool = True
+
+
+class PromoCodeApplyIn(BaseModel):
+    code: str = Field(..., min_length=1)
+    subtotal: float = Field(0, ge=0)
+
+
 class CartItemIn(BaseModel):
     id: str
     name: str
@@ -352,6 +367,8 @@ class OrderIn(BaseModel):
     items: List[CartItemIn]
     subtotal: float
     total: float
+    promo_code: str = ""
+    promo_discount: float = 0
     bank_id: str
     bank_name: str
     payment_proof: str
@@ -599,6 +616,105 @@ async def delete_bank(bank_id: str, admin=Depends(get_current_admin)):
     return {"deleted": True}
 
 
+# Promo Codes ---
+@app.get("/api/admin/promo-codes")
+async def list_promo_codes(admin=Depends(get_current_admin)):
+    rows = await db.promo_codes.find({}).sort("created_at", -1).to_list(length=None)
+    return [_doc_to_promo_code(r) for r in rows]
+
+
+@app.post("/api/admin/promo-codes")
+async def create_promo_code(p: PromoCodeIn, admin=Depends(get_current_admin)):
+    _validate_promo_code_range(p.starts_at, p.ends_at)
+    now = _utc_now()
+    code = p.code.strip()
+    doc = {
+        "_id": str(uuid.uuid4()),
+        "code": code,
+        "code_normalized": _normalize_promo_code(code),
+        "amount": float(p.amount),
+        "starts_at": _ensure_utc(p.starts_at),
+        "ends_at": _ensure_utc(p.ends_at),
+        "active": bool(p.active),
+        "created_at": now,
+        "updated_at": now,
+    }
+    try:
+        await db.promo_codes.insert_one(doc)
+    except DuplicateKeyError:
+        raise HTTPException(status_code=400, detail="Promo code already exists")
+    promo = _doc_to_promo_code(doc)
+    await publish_event({"type": "promo_codes.changed", "promo_code": promo})
+    return promo
+
+
+@app.put("/api/admin/promo-codes/{promo_code_id}")
+async def update_promo_code(promo_code_id: str, p: PromoCodeIn, admin=Depends(get_current_admin)):
+    _validate_promo_code_range(p.starts_at, p.ends_at)
+    now = _utc_now()
+    code = p.code.strip()
+    try:
+        result = await db.promo_codes.update_one(
+            {"_id": promo_code_id},
+            {
+                "$set": {
+                    "code": code,
+                    "code_normalized": _normalize_promo_code(code),
+                    "amount": float(p.amount),
+                    "starts_at": _ensure_utc(p.starts_at),
+                    "ends_at": _ensure_utc(p.ends_at),
+                    "active": bool(p.active),
+                    "updated_at": now,
+                }
+            },
+        )
+    except DuplicateKeyError:
+        raise HTTPException(status_code=400, detail="Promo code already exists")
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Promo code not found")
+    row = await db.promo_codes.find_one({"_id": promo_code_id})
+    promo = _doc_to_promo_code(row)
+    await publish_event({"type": "promo_codes.changed", "promo_code": promo})
+    return promo
+
+
+@app.post("/api/admin/promo-codes/{promo_code_id}/disable")
+async def disable_promo_code(promo_code_id: str, admin=Depends(get_current_admin)):
+    result = await db.promo_codes.update_one(
+        {"_id": promo_code_id},
+        {"$set": {"active": False, "updated_at": _utc_now()}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Promo code not found")
+    row = await db.promo_codes.find_one({"_id": promo_code_id})
+    promo = _doc_to_promo_code(row)
+    await publish_event({"type": "promo_codes.changed", "promo_code": promo})
+    return promo
+
+
+@app.delete("/api/admin/promo-codes/{promo_code_id}")
+async def delete_promo_code(promo_code_id: str, admin=Depends(get_current_admin)):
+    result = await db.promo_codes.delete_one({"_id": promo_code_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Promo code not found")
+    await publish_event({"type": "promo_codes.changed", "promo_code_id": promo_code_id, "deleted": True})
+    return {"deleted": True}
+
+
+@app.post("/api/promo-codes/validate")
+async def validate_promo_code(req: PromoCodeApplyIn):
+    promo = await _get_active_promo_code(req.code)
+    discount = min(float(promo["amount"]), float(req.subtotal))
+    return {
+        "valid": True,
+        "code": promo["code"],
+        "discount_amount": discount,
+        "subtotal": float(req.subtotal),
+        "total": max(float(req.subtotal) - discount, 0),
+        "promo_code": _doc_to_promo_code(promo),
+    }
+
+
 # Orders ---
 @app.post("/api/orders")
 async def create_order(order: OrderIn):
@@ -606,6 +722,13 @@ async def create_order(order: OrderIn):
     customer_address = _format_shipping_address(order)
     order_id = str(uuid.uuid4())
     now = _utc_now()
+    promo = None
+    promo_discount = float(order.promo_discount or 0)
+    total = float(order.total)
+    if order.promo_code.strip():
+        promo = await _get_active_promo_code(order.promo_code)
+        promo_discount = min(float(promo["amount"]), float(order.subtotal))
+        total = max(float(order.subtotal) - promo_discount, 0)
     doc = {
         "_id": order_id,
         "customer_name": order.customer_name,
@@ -622,7 +745,9 @@ async def create_order(order: OrderIn):
         "shipping_mode": order.shipping_mode,
         "items": [i.model_dump() for i in order.items],
         "subtotal": order.subtotal,
-        "total": order.total,
+        "total": total,
+        "promo_code": promo["code"] if promo else "",
+        "promo_discount": promo_discount if promo else 0,
         "shipment_fee": 0,
         "bank_id": order.bank_id,
         "bank_name": order.bank_name,
@@ -831,6 +956,57 @@ def _iso(value):
     return value.isoformat() if value else None
 
 
+def _normalize_promo_code(code: str) -> str:
+    return code.strip().upper()
+
+
+def _ensure_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _validate_promo_code_range(starts_at: datetime, ends_at: datetime):
+    if _ensure_utc(ends_at) < _ensure_utc(starts_at):
+        raise HTTPException(status_code=400, detail="Promo code end date must be after start date")
+
+
+def _promo_status(doc: dict, now: Optional[datetime] = None) -> str:
+    current = now or _utc_now()
+    if not doc.get("active", True):
+        return "disabled"
+    starts_at = doc.get("starts_at")
+    ends_at = doc.get("ends_at")
+    if starts_at and current < starts_at:
+        return "scheduled"
+    if ends_at and current > ends_at:
+        return "expired"
+    return "active"
+
+
+def _doc_to_promo_code(r):
+    return {
+        "id": str(r["_id"]),
+        "code": r["code"],
+        "amount": float(r.get("amount", 0)),
+        "starts_at": _iso(r.get("starts_at")),
+        "ends_at": _iso(r.get("ends_at")),
+        "active": bool(r.get("active", True)),
+        "status": _promo_status(r),
+        "created_at": _iso(r.get("created_at")),
+        "updated_at": _iso(r.get("updated_at")),
+    }
+
+
+async def _get_active_promo_code(code: str) -> dict:
+    promo = await db.promo_codes.find_one({"code_normalized": _normalize_promo_code(code)})
+    if not promo:
+        raise HTTPException(status_code=404, detail="Promo code not found")
+    if _promo_status(promo) != "active":
+        raise HTTPException(status_code=400, detail="Promo code is not available")
+    return promo
+
+
 def _doc_to_order(r):
     return {
         "id": str(r["_id"]),
@@ -850,6 +1026,8 @@ def _doc_to_order(r):
         "items": r.get("items", []),
         "subtotal": float(r.get("subtotal", 0)),
         "total": float(r.get("total", 0)),
+        "promo_code": r.get("promo_code", ""),
+        "promo_discount": float(r.get("promo_discount", 0)),
         "bank_id": str(r["bank_id"]) if r.get("bank_id") else None,
         "bank_name": r.get("bank_name", ""),
         "payment_proof": r.get("payment_proof", ""),
@@ -874,6 +1052,12 @@ def _items_rows_html(order: dict) -> str:
 
 
 def _order_details_html(order: dict) -> str:
+    promo_html = ""
+    if order.get("promo_code") and float(order.get("promo_discount", 0)) > 0:
+        promo_html = (
+            f"<p style=\"margin:0 0 4px\"><strong>Promo Code:</strong> {order['promo_code']} "
+            f"(-{_format_currency(float(order['promo_discount']))})</p>"
+        )
     return f"""
       <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:16px">
         <p style="margin:0 0 4px"><strong>Order ID:</strong> {order['id']}</p>
@@ -883,6 +1067,7 @@ def _order_details_html(order: dict) -> str:
         <p style="margin:0 0 4px"><strong>Facebook:</strong> {order['facebook_account']}</p>
         <p style="margin:0 0 4px"><strong>Address:</strong> {order['customer_address']}</p>
         <p style="margin:0 0 4px"><strong>Shipping Mode:</strong> {order['shipping_mode']}</p>
+        {promo_html}
         <p style="margin:0 0 4px"><strong>Waybill:</strong> {order['waybill'] or 'Not available yet'}</p>
         <p style="margin:0"><strong>Total:</strong> {_format_currency(order['total'])}</p>
       </div>
