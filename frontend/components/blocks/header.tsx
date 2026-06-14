@@ -7,8 +7,8 @@ import { CartDrawer } from "./cart-drawer"
 import { useCart } from "./cart-context"
 
 const navLinks = [
-  { href: "/shop", label: "Shop" },
-  { href: "/", label: "About" },
+  { href: "/shop", label: "Shop Here" },
+  
 ]
 
 export function Header() {

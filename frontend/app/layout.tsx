@@ -3,6 +3,13 @@ import type { Metadata, Viewport } from 'next'
 import { DM_Sans, Playfair_Display, Merriweather, Work_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { CartProvider } from '@/components/blocks/cart-context'
+import {
+  DEFAULT_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+  defaultOgImage,
+  storefrontKeywords,
+} from '@/lib/seo'
 
 import './globals.css'
 
@@ -33,10 +40,54 @@ const workSans = Work_Sans({
 
 
 export const metadata: Metadata = {
-  title: 'Essencia — Natural Skincare',
-  description: 'Premium natural skincare and body care products. Glow gently with blocks.',
-  generator: 'v0.app',
-  keywords: ['skincare', 'natural', 'organic', 'beauty', 'body care', 'cruelty-free'],
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} | Perfume, Makeup, Skincare and Clothing`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: 'Beauty and fashion',
+  keywords: storefrontKeywords,
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: `${SITE_NAME} | Perfume, Makeup, Skincare and Clothing`,
+    description: DEFAULT_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    images: [
+      {
+        url: defaultOgImage,
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} beauty storefront`,
+      },
+    ],
+    locale: 'en_PH',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${SITE_NAME} | Perfume, Makeup, Skincare and Clothing`,
+    description: DEFAULT_DESCRIPTION,
+    images: [defaultOgImage],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   icons: {
     icon: [
       {

@@ -128,7 +128,7 @@ export function GooeyText({
         <span
           ref={text1Ref}
           className={cn(
-            "absolute inline-block select-none text-center text-5xl md:text-[110pt]",
+            "absolute inline-block select-none text-center text-6xl md:text-[90pt] xl:text-[110pt]",
             "text-background",
             textClassName
           )}
@@ -136,7 +136,7 @@ export function GooeyText({
         <span
           ref={text2Ref}
           className={cn(
-            "absolute inline-block select-none text-center text-5xl md:text-[110pt]",
+            "absolute inline-block select-none text-center text-6xl md:text-[90pt] xl:text-[110pt]",
             "text-background",
             textClassName
           )}

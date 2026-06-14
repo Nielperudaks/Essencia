@@ -55,7 +55,7 @@ export function Hero() {
       <div className="absolute inset-0 bg-black/54" />
       <div className="absolute inset-x-0 bottom-0 h-1/3 bg-linear-to-t from-black to-transparent" />
 
-      <div className="storefront-shell relative z-10 flex min-h-screen items-end pb-20 pt-32 sm:pb-24 lg:pb-28">
+      <div className="storefront-shell relative z-10 flex min-h-screen items-end pb-20 pt-32  sm:pb-24 lg:pb-28">
         <div className="grid w-full gap-12 lg:grid-cols-[1fr_360px] lg:items-end">
           <div>
             <span

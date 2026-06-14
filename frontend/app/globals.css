@@ -179,7 +179,7 @@
 
 @layer components {
   .storefront-shell {
-    @apply mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-[90vw] px-5 sm:px-6 lg:px-8;
   }
 
   .storefront-section {

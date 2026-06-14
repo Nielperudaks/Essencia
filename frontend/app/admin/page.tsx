@@ -148,10 +148,10 @@ function OrdersPanel({ orders, token, onRefresh }: { orders: Order[]; token: str
       setBusy(false)
     }
   }
-  async function ship(id: string, waybill: string, shipmentFee: number) {
+  async function ship(id: string, waybill: string) {
     setBusy(true)
     try {
-      await api.confirmShipping(token, id, waybill, shipmentFee)
+      await api.confirmShipping(token, id, waybill)
       onRefresh()
       setSelected(null)
     } finally {
@@ -222,7 +222,7 @@ function OrdersPanel({ orders, token, onRefresh }: { orders: Order[]; token: str
           onClose={() => setSelected(null)}
           onConfirm={() => confirm(selected.id)}
           onReject={() => reject(selected.id)}
-          onShip={(waybill, shipmentFee) => ship(selected.id, waybill, shipmentFee)}
+          onShip={(waybill) => ship(selected.id, waybill)}
           busy={busy}
         />
       )}
@@ -253,11 +253,11 @@ function OrderDrawer({
   onClose: () => void
   onConfirm: () => void
   onReject: () => void
-  onShip: (waybill: string, shipmentFee: number) => void
+  onShip: (waybill: string) => void
   busy: boolean
 }) {
   const [shippingWaybill, setShippingWaybill] = useState(order.waybill || "")
-  const [shippingFee, setShippingFee] = useState("")
+ 
   const [shippingError, setShippingError] = useState<string | null>(null)
 
   function submitShipping() {
@@ -266,13 +266,9 @@ function OrderDrawer({
       setShippingError("Waybill is required")
       return
     }
-    const fee = Number.parseFloat(shippingFee)
-    if (!Number.isFinite(fee) || fee < 0) {
-      setShippingError("Shipment fee is required")
-      return
-    }
+    
     setShippingError(null)
-    onShip(trimmed, fee)
+    onShip(trimmed)
   }
 
   return (
@@ -291,9 +287,9 @@ function OrderDrawer({
             <Field label="Phone" value={order.customer_phone || "—"} />
             <Field label="Facebook" value={order.facebook_account || "—"} />
             <Field label="Bank" value={order.bank_name} />
-            <Field label="Shipping Mode" value={order.shipping_mode || "—"} />
+            {/* <Field label="Shipping Mode" value={order.shipping_mode || "—"} /> */}
             <Field label="Waybill" value={order.waybill || "—"} />
-            <Field label="Shipment Fee" value={formatCurrency(order.shipment_fee || 0)} />
+            {/* <Field label="Shipment Fee" value={formatCurrency(order.shipment_fee || 0)} /> */}
             <Field label="Province" value={order.province || "—"} />
             <Field label="Town/City" value={order.town_city || "—"} />
             <Field label="Barangay" value={order.barangay || "—"} />
@@ -374,7 +370,7 @@ function OrderDrawer({
                 className="w-full px-4 py-3 rounded-full bg-card border border-border focus:outline-none focus:border-primary"
                 data-testid="shipping-waybill-input"
               />
-              <input
+              {/* <input
                 type="number"
                 min="0"
                 step="0.01"
@@ -383,7 +379,7 @@ function OrderDrawer({
                 placeholder="Shipment Fee *"
                 className="w-full px-4 py-3 rounded-full bg-card border border-border focus:outline-none focus:border-primary"
                 data-testid="shipping-fee-input"
-              />
+              /> */}
               {shippingError && <p className="text-sm text-destructive">{shippingError}</p>}
               <button
                 type="button"
