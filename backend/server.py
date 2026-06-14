@@ -977,9 +977,9 @@ def _promo_status(doc: dict, now: Optional[datetime] = None) -> str:
         return "disabled"
     starts_at = doc.get("starts_at")
     ends_at = doc.get("ends_at")
-    if starts_at and current < starts_at:
+    if starts_at and current < _ensure_utc(starts_at):
         return "scheduled"
-    if ends_at and current > ends_at:
+    if ends_at and current > _ensure_utc(ends_at):
         return "expired"
     return "active"
 

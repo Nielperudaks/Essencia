@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronDown, Upload, Check, Trash2, Minus, Plus } from "lu
 import { Header } from "@/components/blocks/header"
 import { Footer } from "@/components/blocks/footer"
 import { useCart } from "@/components/blocks/cart-context"
-import { api, fileToBase64, type Bank } from "@/lib/api"
+import { api, fileToBase64, type Bank, type PromoCodeValidation } from "@/lib/api"
 import { formatCurrency } from "@/lib/currency"
 
 type ShippingMode = "LBC" | "J&T"
@@ -22,6 +22,10 @@ export default function PaymentPage() {
   const [loadingBanks, setLoadingBanks] = useState(true)
   const [openBankId, setOpenBankId] = useState<string | null>(null)
   const [proofByBank, setProofByBank] = useState<Record<string, { name: string; base64: string }>>({})
+  const [promoCodeInput, setPromoCodeInput] = useState("")
+  const [appliedPromo, setAppliedPromo] = useState<PromoCodeValidation | null>(null)
+  const [promoLoading, setPromoLoading] = useState(false)
+  const [promoError, setPromoError] = useState<string | null>(null)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -31,6 +35,7 @@ export default function PaymentPage() {
   const [streetHouseNo, setStreetHouseNo] = useState("")
   const [zipcode, setZipcode] = useState("")
   const [facebookAccount, setFacebookAccount] = useState("")
+  const [shippingMode, setShippingMode] = useState<ShippingMode>("LBC")
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +50,8 @@ export default function PaymentPage() {
       .finally(() => setLoadingBanks(false))
   }, [])
 
-  const total = subtotal // free shipping
+  const discount = appliedPromo?.discount_amount || 0
+  const total = Math.max(subtotal - discount, 0)
 
   async function handleFile(bankId: string, file: File | null) {
     if (!file) return
@@ -56,6 +62,27 @@ export default function PaymentPage() {
     const b64 = await fileToBase64(file)
     setProofByBank((prev) => ({ ...prev, [bankId]: { name: file.name, base64: b64 } }))
     setError(null)
+  }
+
+  async function handleApplyPromo() {
+    const code = promoCodeInput.trim()
+    setPromoError(null)
+    if (!code) {
+      setAppliedPromo(null)
+      setPromoError("Enter promo code")
+      return
+    }
+    setPromoLoading(true)
+    try {
+      const result = await api.validatePromoCode(code, subtotal)
+      setAppliedPromo(result)
+    } catch (e) {
+      const err = e as Error
+      setAppliedPromo(null)
+      setPromoError(err.message || "Promo code invalid")
+    } finally {
+      setPromoLoading(false)
+    }
   }
 
   async function handleSubmit(bankId: string, bankName: string) {
@@ -74,6 +101,7 @@ export default function PaymentPage() {
       streetHouseNo,
       zipcode,
       facebookAccount,
+      shippingMode,
     ]
     if (requiredFields.some((field) => !field.trim())) {
       setError("Please complete all required customer and shipping fields")
@@ -96,7 +124,7 @@ export default function PaymentPage() {
         street_house_no: streetHouseNo,
         zipcode,
         facebook_account: facebookAccount,
-        // shipping_mode: shippingMode,
+        shipping_mode: shippingMode,
         items: items.map((i) => ({
           id: i.id,
           name: i.name,
@@ -108,6 +136,8 @@ export default function PaymentPage() {
         })),
         subtotal,
         total,
+        promo_code: appliedPromo?.code || "",
+        promo_discount: discount,
         bank_id: bankId,
         bank_name: bankName,
         payment_proof: proof.base64,
@@ -214,7 +244,7 @@ export default function PaymentPage() {
                   <input type="text" placeholder="Barangay *" value={barangay} onChange={(e) => setBarangay(e.target.value)} className="storefront-input" data-testid="input-barangay" />
                   <input type="text" placeholder="Street/house no. *" value={streetHouseNo} onChange={(e) => setStreetHouseNo(e.target.value)} className="storefront-input" data-testid="input-street-house-no" />
                   <input type="text" placeholder="Zipcode *" value={zipcode} onChange={(e) => setZipcode(e.target.value)} className="storefront-input" data-testid="input-zipcode" />
-                  {/* <div className="sm:col-span-2">
+                  <div className="sm:col-span-2">
                     <label htmlFor="shipping-mode" className="text-sm font-medium text-foreground mb-2 block">
                       Shipping Mode *
                     </label>
@@ -234,7 +264,7 @@ export default function PaymentPage() {
                         ? "Shipping fee will be COD or COP."
                         : "Shipping fee will be COD."}
                     </p>
-                  </div> */}
+                  </div>
                 </div>
               </section>
 
@@ -348,14 +378,47 @@ export default function PaymentPage() {
                   <span>Subtotal ({items.length} items)</span>
                   <span data-testid="summary-subtotal">{formatCurrency(subtotal)}</span>
                 </div>
-                {/* <div className="flex justify-between text-muted-foreground">
+                {appliedPromo && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Promo ({appliedPromo.code})</span>
+                    <span data-testid="summary-discount">-{formatCurrency(discount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-muted-foreground">
                   <span>Shipping</span>
                   <span>COD / COP</span>
-                </div> */}
+                </div>
                 <div className="border-t border-border pt-3 flex justify-between text-base font-medium text-foreground">
                   <span>Total</span>
                   <span data-testid="summary-total">{formatCurrency(total)}</span>
                 </div>
+              </div>
+              <div className="mb-5 space-y-3">
+                <label className="text-sm font-medium text-foreground block" htmlFor="promo-code-input">
+                  Promo code
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="promo-code-input"
+                    type="text"
+                    value={promoCodeInput}
+                    onChange={(e) => setPromoCodeInput(e.target.value)}
+                    placeholder="Enter promo code"
+                    className="storefront-input flex-1"
+                    data-testid="promo-code-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyPromo}
+                    disabled={promoLoading}
+                    className="storefront-button px-4 whitespace-nowrap"
+                    data-testid="apply-promo-btn"
+                  >
+                    {promoLoading ? "Applying..." : "Apply"}
+                  </button>
+                </div>
+                {promoError && <p className="text-xs text-destructive" data-testid="promo-code-error">{promoError}</p>}
+                {appliedPromo && <p className="text-xs text-green-700" data-testid="promo-code-success">Applied {appliedPromo.code}</p>}
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Choose a bank below, scan the QR code, complete the transfer, then upload your payment screenshot to finalize the order. Admin will confirm shortly after.
