@@ -252,7 +252,6 @@ class TestOrders:
             "street_house_no": "123 Test Lane",
             "zipcode": "4114",
             "facebook_account": "facebook.com/test.customer",
-            "shipping_mode": "LBC",
             "items": [
                 {"id": "acqua-di-gio", "name": "Acqua di Gio", "description": "", "price": 399, "quantity": 1, "image": "", "size": "100ml"}
             ],
@@ -273,8 +272,6 @@ class TestOrders:
         assert body["id"]
         assert body["customer_email"] == "test_customer@example.com"
         assert body["province"] == "Cavite"
-        assert body["shipping_mode"] == "LBC"
-        assert body["waybill"] == ""
         assert body["total"] == 399.0
         TestOrders.order_id_confirm = body["id"]
 

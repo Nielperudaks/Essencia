@@ -11,10 +11,6 @@ import { useCart } from "@/components/blocks/cart-context"
 import { api, fileToBase64, type Bank, type PromoCodeValidation } from "@/lib/api"
 import { formatCurrency } from "@/lib/currency"
 
-type ShippingMode = "LBC" | "J&T"
-
-const SHIPPING_MODES: ShippingMode[] = ["LBC", "J&T"]
-
 export default function PaymentPage() {
   const router = useRouter()
   const { items, subtotal, removeItem, updateQuantity, clearCart } = useCart()
@@ -35,7 +31,6 @@ export default function PaymentPage() {
   const [streetHouseNo, setStreetHouseNo] = useState("")
   const [zipcode, setZipcode] = useState("")
   const [facebookAccount, setFacebookAccount] = useState("")
-  const [shippingMode, setShippingMode] = useState<ShippingMode>("LBC")
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -101,10 +96,9 @@ export default function PaymentPage() {
       streetHouseNo,
       zipcode,
       facebookAccount,
-      shippingMode,
     ]
     if (requiredFields.some((field) => !field.trim())) {
-      setError("Please complete all required customer and shipping fields")
+      setError("Please complete all required customer fields")
       return
     }
     const proof = proofByBank[bankId]
@@ -124,7 +118,6 @@ export default function PaymentPage() {
         street_house_no: streetHouseNo,
         zipcode,
         facebook_account: facebookAccount,
-        shipping_mode: shippingMode,
         items: items.map((i) => ({
           id: i.id,
           name: i.name,
@@ -244,27 +237,6 @@ export default function PaymentPage() {
                   <input type="text" placeholder="Barangay *" value={barangay} onChange={(e) => setBarangay(e.target.value)} className="storefront-input" data-testid="input-barangay" />
                   <input type="text" placeholder="Street/house no. *" value={streetHouseNo} onChange={(e) => setStreetHouseNo(e.target.value)} className="storefront-input" data-testid="input-street-house-no" />
                   <input type="text" placeholder="Zipcode *" value={zipcode} onChange={(e) => setZipcode(e.target.value)} className="storefront-input" data-testid="input-zipcode" />
-                  <div className="sm:col-span-2">
-                    <label htmlFor="shipping-mode" className="text-sm font-medium text-foreground mb-2 block">
-                      Shipping Mode *
-                    </label>
-                    <select
-                      id="shipping-mode"
-                      value={shippingMode}
-                      onChange={(e) => setShippingMode(e.target.value as ShippingMode)}
-                      className="storefront-input"
-                      data-testid="select-shipping-mode"
-                    >
-                      {SHIPPING_MODES.map((mode) => (
-                        <option key={mode} value={mode}>{mode}</option>
-                      ))}
-                    </select>
-                    <p className="mt-2 text-xs text-muted-foreground" data-testid="shipping-mode-note">
-                      {shippingMode === "LBC"
-                        ? "Shipping fee will be COD or COP."
-                        : "Shipping fee will be COD."}
-                    </p>
-                  </div>
                 </div>
               </section>
 
@@ -384,10 +356,6 @@ export default function PaymentPage() {
                     <span data-testid="summary-discount">-{formatCurrency(discount)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Shipping</span>
-                  <span>COD / COP</span>
-                </div>
                 <div className="border-t border-border pt-3 flex justify-between text-base font-medium text-foreground">
                   <span>Total</span>
                   <span data-testid="summary-total">{formatCurrency(total)}</span>

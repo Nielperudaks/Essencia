@@ -112,9 +112,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
                 <Info label="Email" value={order.customer_email} />
                 <Info label="Phone" value={order.customer_phone || "—"} />
                 <Info label="Facebook" value={order.facebook_account || "—"} />
-                <Info label="Shipping Mode" value={order.shipping_mode || "—"} />
                 <Info label="Waybill" value={order.waybill || "—"} />
-                {/* <Info label="Shipment Fee" value={formatCurrency(order.shipment_fee || 0)} /> */}
                 <Info label="Province" value={order.province || "—"} />
                 <Info label="Town/City" value={order.town_city || "—"} />
                 <Info label="Barangay" value={order.barangay || "—"} />

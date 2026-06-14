@@ -82,8 +82,6 @@ export type Order = {
   zipcode: string
   facebook_account: string
   waybill: string
-  shipping_mode: "LBC" | "J&T"
-  shipment_fee: number
   items: OrderItem[]
   subtotal: number
   total: number

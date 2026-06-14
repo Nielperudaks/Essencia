@@ -363,7 +363,6 @@ class OrderIn(BaseModel):
     zipcode: str = Field(..., min_length=1)
     facebook_account: str = Field(..., min_length=1)
     waybill: str = ""
-    #shipping_mode: Literal["LBC", "J&T"]
     items: List[CartItemIn]
     subtotal: float
     total: float
@@ -376,7 +375,6 @@ class OrderIn(BaseModel):
 
 class ShippingConfirmIn(BaseModel):
     waybill: str = Field(..., min_length=1)
-    #shipment_fee: float = Field(0, ge=0)
 
 
 # ============== Auth Helpers ==============
@@ -715,7 +713,7 @@ async def validate_promo_code(req: PromoCodeApplyIn):
     }
 
 
-# Orders --- removed "shipping_mode": order.shipping_mode,
+# Orders ---
 @app.post("/api/orders")
 async def create_order(order: OrderIn):
     _validate_uuid(order.bank_id)
@@ -742,13 +740,11 @@ async def create_order(order: OrderIn):
         "zipcode": order.zipcode,
         "facebook_account": order.facebook_account,
         "waybill": order.waybill,
-        #"shipping_mode": order.shipping_mode,
         "items": [i.model_dump() for i in order.items],
         "subtotal": order.subtotal,
         "total": total,
         "promo_code": promo["code"] if promo else "",
         "promo_discount": promo_discount if promo else 0,
-        # "shipment_fee": 0,
         "bank_id": order.bank_id,
         "bank_name": order.bank_name,
         "payment_proof": order.payment_proof,
@@ -1021,8 +1017,6 @@ def _doc_to_order(r):
         "zipcode": r.get("zipcode", ""),
         "facebook_account": r.get("facebook_account", ""),
         "waybill": r.get("waybill", ""),
-        #"shipping_mode": r.get("shipping_mode", ""),
-        #"shipment_fee": float(r.get("shipment_fee", 0)),
         "items": r.get("items", []),
         "subtotal": float(r.get("subtotal", 0)),
         "total": float(r.get("total", 0)),
@@ -1050,7 +1044,6 @@ def _items_rows_html(order: dict) -> str:
         for i in order["items"]
     )
 
-# removed -- <p style="margin:0 0 4px"><strong>Shipping Mode:</strong> {order['shipping_mode']}</p>
 def _order_details_html(order: dict) -> str:
     promo_html = ""
     if order.get("promo_code") and float(order.get("promo_discount", 0)) > 0:
@@ -1066,7 +1059,6 @@ def _order_details_html(order: dict) -> str:
         <p style="margin:0 0 4px"><strong>Phone:</strong> {order['customer_phone'] or '-'}</p>
         <p style="margin:0 0 4px"><strong>Facebook:</strong> {order['facebook_account']}</p>
         <p style="margin:0 0 4px"><strong>Address:</strong> {order['customer_address']}</p>
-        <p style="margin:0 0 4px"><strong>Shipping Mode:</strong> {order['shipping_mode']}</p>
         <p style="margin:0 0 4px"><strong>Waybill:</strong> {order['waybill'] or 'Not available yet'}</p>
         <p style="margin:0"><strong>Total:</strong> {_format_currency(order['total'])}</p>
       </div>
