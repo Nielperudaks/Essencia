@@ -168,11 +168,7 @@ export default function ProductPage() {
                   {product.name}
                 </h1>
                 <div className="mb-6 flex items-center gap-3">
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Star key={index} className="size-4 fill-foreground text-foreground" />
-                    ))}
-                  </div>
+                  
                   <span className="mb-3 block text-xs font-semibold uppercase text-muted-foreground" style={{ letterSpacing: "0.16em" }}>
                   {product.gender}
                 </span>
