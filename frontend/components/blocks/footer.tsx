@@ -26,7 +26,7 @@ export function Footer() {
             <div>
               <h2 className="mb-4 font-serif text-5xl font-semibold text-foreground">Essencia</h2>
               <p className="max-w-sm text-sm leading-6 text-muted-foreground">
-                A monochrome edit of fragrance, makeup, and skincare essentials for modern rituals.
+                Your one and only fragrance, makeup, and skincare essentials for modern rituals.
               </p>
               <a
                 href="https://www.facebook.com/essencia.edp"

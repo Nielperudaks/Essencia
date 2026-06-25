@@ -163,9 +163,7 @@ export default function ProductPage() {
             <div className="lg:pt-10">
               <div data-product-reveal className="border-b border-border pb-8">
                 <span className="storefront-kicker">{product.category}</span>
-                <span className="mb-3 block text-xs font-medium uppercase text-muted-foreground" style={{ letterSpacing: "0.16em" }}>
-                  {product.gender}
-                </span>
+                
                 <h1 className="mb-5 font-serif text-5xl font-semibold leading-none text-foreground sm:text-6xl lg:text-7xl" data-testid="product-name">
                   {product.name}
                 </h1>
@@ -175,7 +173,9 @@ export default function ProductPage() {
                       <Star key={index} className="size-4 fill-foreground text-foreground" />
                     ))}
                   </div>
-                  <span className="text-sm text-muted-foreground">(128 reviews)</span>
+                  <span className="mb-3 block text-xs font-semibold uppercase text-muted-foreground" style={{ letterSpacing: "0.16em" }}>
+                  {product.gender}
+                </span>
                 </div>
                 <p className="max-w-xl text-base leading-7 text-muted-foreground">{product.description}</p>
               </div>
