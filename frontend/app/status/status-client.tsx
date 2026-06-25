@@ -158,7 +158,6 @@ function StatusContent() {
                     <Info label="Email" value={order.customer_email} />
                     <Info label="Phone" value={order.customer_phone || "-"} />
                     <Info label="Facebook" value={order.facebook_account || "-"} />
-                    {/* <Info label="Shipping Mode" value={order.shipping_mode} /> */}
                     <Info label="Waybill" value={order.waybill || "Not available yet"} />
                     <Info label="Address" value={order.customer_address || "-"} />
                     <Info label="Submitted" value={new Date(order.created_at).toLocaleString()} />

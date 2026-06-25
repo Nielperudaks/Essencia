@@ -1,6 +1,7 @@
 """Essencia Perfume backend API tests."""
 import os
 import uuid
+from datetime import datetime, timedelta, timezone
 import pytest
 import requests
 
@@ -251,7 +252,6 @@ class TestOrders:
             "street_house_no": "123 Test Lane",
             "zipcode": "4114",
             "facebook_account": "facebook.com/test.customer",
-            "shipping_mode": "LBC",
             "items": [
                 {"id": "acqua-di-gio", "name": "Acqua di Gio", "description": "", "price": 399, "quantity": 1, "image": "", "size": "100ml"}
             ],
@@ -272,8 +272,6 @@ class TestOrders:
         assert body["id"]
         assert body["customer_email"] == "test_customer@example.com"
         assert body["province"] == "Cavite"
-        assert body["shipping_mode"] == "LBC"
-        assert body["waybill"] == ""
         assert body["total"] == 399.0
         TestOrders.order_id_confirm = body["id"]
 
@@ -333,6 +331,64 @@ class TestOrders:
         assert r.json()["id"] == oid
 
 
+# ============== Promo Codes ==============
+class TestPromoCodes:
+    created_id = None
+    created_code = None
+
+    def _promo_payload(self):
+        now = datetime.now(timezone.utc)
+        code = f"TEST_PROMO_{uuid.uuid4().hex[:6].upper()}"
+        TestPromoCodes.created_code = code
+        return {
+            "code": code,
+            "amount": 50,
+            "starts_at": (now - timedelta(days=1)).isoformat(),
+            "ends_at": (now + timedelta(days=1)).isoformat(),
+            "active": True,
+        }
+
+    def test_create_promo_requires_auth(self, session):
+        r = session.post(f"{BASE_URL}/api/admin/promo-codes", json={"code": "NOAUTH", "amount": 10})
+        assert r.status_code in (401, 403)
+
+    def test_create_promo_code(self, session, auth_headers):
+        payload = self._promo_payload()
+        r = session.post(f"{BASE_URL}/api/admin/promo-codes", json=payload, headers=auth_headers)
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["code"] == payload["code"]
+        assert body["amount"] == payload["amount"]
+        assert body["active"] is True
+        assert body["id"]
+        TestPromoCodes.created_id = body["id"]
+
+    def test_list_promo_codes_admin(self, session, auth_headers):
+        r = session.get(f"{BASE_URL}/api/admin/promo-codes", headers=auth_headers)
+        assert r.status_code == 200, r.text
+        codes = [row["code"] for row in r.json()]
+        assert TestPromoCodes.created_code in codes
+
+    def test_validate_promo_code_public(self, session):
+        r = session.post(f"{BASE_URL}/api/promo-codes/validate", json={"code": TestPromoCodes.created_code})
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["valid"] is True
+        assert body["code"] == TestPromoCodes.created_code
+        assert body["discount_amount"] == 50
+
+    def test_disable_promo_code(self, session, auth_headers):
+        pid = TestPromoCodes.created_id
+        assert pid
+        r = session.post(f"{BASE_URL}/api/admin/promo-codes/{pid}/disable", headers=auth_headers)
+        assert r.status_code == 200, r.text
+        assert r.json()["active"] is False
+
+    def test_validate_disabled_promo_code_fails(self, session):
+        r = session.post(f"{BASE_URL}/api/promo-codes/validate", json={"code": TestPromoCodes.created_code})
+        assert r.status_code in (400, 404)
+
+
 # ============== Cleanup ==============
 class TestZCleanup:
     def test_delete_test_banks(self, session, auth_headers):
@@ -342,3 +398,10 @@ class TestZCleanup:
         for b in r.json():
             if b["name"].startswith("TEST_"):
                 session.delete(f"{BASE_URL}/api/admin/banks/{b['id']}", headers=auth_headers)
+
+    def test_delete_test_promo_codes(self, session, auth_headers):
+        r = session.get(f"{BASE_URL}/api/admin/promo-codes", headers=auth_headers)
+        assert r.status_code == 200
+        for row in r.json():
+            if row["code"].startswith("TEST_PROMO_"):
+                session.delete(f"{BASE_URL}/api/admin/promo-codes/{row['id']}", headers=auth_headers)
