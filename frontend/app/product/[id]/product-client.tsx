@@ -169,7 +169,7 @@ export default function ProductPage() {
                 </h1>
                 <div className="mb-6 flex items-center gap-3">
                   
-                  <span className="mb-3 block text-xs font-semibold uppercase text-muted-foreground" style={{ letterSpacing: "0.16em" }}>
+                  <span className="mb-3 block text-xs font-extrabold uppercase text-muted-foreground" style={{ letterSpacing: "0.16em" }}>
                   {product.gender}
                 </span>
                 </div>
