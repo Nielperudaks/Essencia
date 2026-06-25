@@ -389,7 +389,7 @@ export default function PaymentPage() {
                 {appliedPromo && <p className="text-xs text-green-700" data-testid="promo-code-success">Applied {appliedPromo.code}</p>}
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Choose a bank below, scan the QR code, complete the transfer, then upload your payment screenshot to finalize the order. Admin will confirm shortly after.
+                Choose your preferred bank, scan the QR code, complete the transfer, then upload your payment screenshot to finalize the order. Admin will confirm shortly after.
               </p>
             </aside>
           </div>
