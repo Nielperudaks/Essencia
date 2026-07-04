@@ -10,6 +10,7 @@ import { Footer } from "@/components/blocks/footer"
 import { useCart } from "@/components/blocks/cart-context"
 import { api, fileToBase64, type Bank, type PromoCodeValidation } from "@/lib/api"
 import { formatCurrency } from "@/lib/currency"
+import { calculatePromoDiscount } from "@/lib/promo-discount"
 
 export default function PaymentPage() {
   const router = useRouter()
@@ -45,7 +46,7 @@ export default function PaymentPage() {
       .finally(() => setLoadingBanks(false))
   }, [])
 
-  const discount = appliedPromo?.discount_amount || 0
+  const discount = calculatePromoDiscount(appliedPromo?.promo_code.amount, subtotal)
   const total = Math.max(subtotal - discount, 0)
 
   async function handleFile(bankId: string, file: File | null) {
