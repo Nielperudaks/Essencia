@@ -370,12 +370,12 @@ class TestPromoCodes:
         assert TestPromoCodes.created_code in codes
 
     def test_validate_promo_code_public(self, session):
-        r = session.post(f"{BASE_URL}/api/promo-codes/validate", json={"code": TestPromoCodes.created_code})
+        r = session.post(f"{BASE_URL}/api/promo-codes/validate", json={"code": TestPromoCodes.created_code, "subtotal": 200})
         assert r.status_code == 200, r.text
         body = r.json()
         assert body["valid"] is True
         assert body["code"] == TestPromoCodes.created_code
-        assert body["discount_amount"] == 50
+        assert body["discount_amount"] == 100
 
     def test_disable_promo_code(self, session, auth_headers):
         pid = TestPromoCodes.created_id

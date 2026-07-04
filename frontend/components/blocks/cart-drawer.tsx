@@ -148,7 +148,7 @@ export function CartDrawer() {
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Shipping</span>
-                <span>Via LALAMOVE</span>
+                <span>Via J&T</span>
               </div>
               <div className="flex justify-between border-t border-border pt-4 text-base font-semibold text-foreground">
                 <span>Total</span>

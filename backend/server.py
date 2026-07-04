@@ -331,7 +331,7 @@ class BankIn(BaseModel):
 
 class PromoCodeIn(BaseModel):
     code: str = Field(..., min_length=1)
-    amount: float = Field(..., gt=0)
+    amount: float = Field(..., gt=0, le=100)
     starts_at: datetime
     ends_at: datetime
     active: bool = True
@@ -702,7 +702,7 @@ async def delete_promo_code(promo_code_id: str, admin=Depends(get_current_admin)
 @app.post("/api/promo-codes/validate")
 async def validate_promo_code(req: PromoCodeApplyIn):
     promo = await _get_active_promo_code(req.code)
-    discount = min(float(promo["amount"]), float(req.subtotal))
+    discount = _calculate_promo_discount(promo, req.subtotal)
     return {
         "valid": True,
         "code": promo["code"],
@@ -725,7 +725,7 @@ async def create_order(order: OrderIn):
     total = float(order.total)
     if order.promo_code.strip():
         promo = await _get_active_promo_code(order.promo_code)
-        promo_discount = min(float(promo["amount"]), float(order.subtotal))
+        promo_discount = _calculate_promo_discount(promo, order.subtotal)
         total = max(float(order.subtotal) - promo_discount, 0)
     doc = {
         "_id": order_id,
@@ -965,6 +965,10 @@ def _ensure_utc(value: datetime) -> datetime:
 def _validate_promo_code_range(starts_at: datetime, ends_at: datetime):
     if _ensure_utc(ends_at) < _ensure_utc(starts_at):
         raise HTTPException(status_code=400, detail="Promo code end date must be after start date")
+
+
+def _calculate_promo_discount(promo: dict, subtotal: float) -> float:
+    return min(float(subtotal) * (float(promo["amount"]) / 100), float(subtotal))
 
 
 def _promo_status(doc: dict, now: Optional[datetime] = None) -> str:

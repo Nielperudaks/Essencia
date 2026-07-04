@@ -774,7 +774,7 @@ function PromoCodesPanel({ promoCodes, token, onRefresh }: { promoCodes: PromoCo
           <thead className="bg-muted/40">
             <tr className="text-left">
               <th className="px-5 py-3 font-medium">Code</th>
-              <th className="px-5 py-3 font-medium">Amount</th>
+              <th className="px-5 py-3 font-medium">Discount</th>
               <th className="px-5 py-3 font-medium">Availability</th>
               <th className="px-5 py-3 font-medium">Status</th>
               <th className="px-5 py-3 font-medium text-right">Actions</th>
@@ -791,7 +791,7 @@ function PromoCodesPanel({ promoCodes, token, onRefresh }: { promoCodes: PromoCo
               promoCodes.map((promo) => (
                 <tr key={promo.id} className="border-t border-border" data-testid={`promo-code-row-${promo.id}`}>
                   <td className="px-5 py-4 font-medium">{promo.code}</td>
-                  <td className="px-5 py-4">{formatCurrency(promo.amount)}</td>
+                  <td className="px-5 py-4">{promo.amount}%</td>
                   <td className="px-5 py-4">
                     <div className="text-xs text-muted-foreground">
                       {formatPromoDate(promo.starts_at)} - {formatPromoDate(promo.ends_at)}
@@ -869,8 +869,8 @@ function PromoCodeForm({ token, initial, onClose, onSaved }: { token: string; in
       return
     }
     const parsedAmount = Number.parseFloat(amount)
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setError("Amount must be greater than 0")
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0 || parsedAmount > 100) {
+      setError("Discount must be between 1 and 100")
       return
     }
     if (!startsAt || !endsAt) {
@@ -921,10 +921,11 @@ function PromoCodeForm({ token, initial, onClose, onSaved }: { token: string; in
           <input
             data-testid="promo-amount-input"
             type="number"
-            min="0"
+            min="1"
+            max="100"
             step="0.01"
             className="w-full px-4 py-3 rounded-full bg-background border border-border focus:outline-none focus:border-primary"
-            placeholder="Amount off *"
+            placeholder="Discount percent *"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
